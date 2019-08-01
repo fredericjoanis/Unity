@@ -1,66 +1,145 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using System.Linq;
+using Unity.Burst;
+using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Prototype
 {
-    public interface IMonoBehaviorJob
+    public delegate void FunctionVoid<Data>(ref Data data);
+
+
+    public interface IMessage
     {
-        void Execute();
     }
 
-    public struct JobKeepValues<T> : IJob where T : struct, IMonoBehaviorJob
+    public interface IMonoBehaviorData
     {
-        public NativeArray<T> data;
+        void Execute();
+        void ProcessMessage(IMessage message);
+    }
+
+    //[BurstCompile]
+    public struct JobKeepValues<Data> : IJob
+        where Data : struct, IMonoBehaviorData
+    {
+        public NativeArray<Data> data;
+        public NativeQueue<IntPtr> MailBox;
+        public Guid Id;
+
+        public void AddMessage(IMessage message)
+        {
+            MailBox.Enqueue(Marshal.GetIUnknownForObject(message));
+        }
 
         public void Execute()
         {
-            T dataToExecute = data[0];
+            Data dataToExecute = data[0];
+
+            while (MailBox.Count > 0)
+            {
+                if (MailBox.TryDequeue(out IntPtr ptr))
+                {
+                    IMessage message = (IMessage)Marshal.GetObjectForIUnknown(ptr);
+                    dataToExecute.ProcessMessage(message);
+                }
+            }
+
             dataToExecute.Execute();
+
             data[0] = dataToExecute;
         }
     }
 
-    public abstract class MonoBehaviorCommon<T> : MonoBehaviour where T : struct, IMonoBehaviorJob
+    public abstract class MonoBehaviorCommon<Data> : MonoBehaviour
+        where Data : struct, IMonoBehaviorData
     {
-        public JobKeepValues<T> job;
+        protected JobKeepValues<Data> jobKeepValues;
 
-        public abstract T InitialData { get; }
+        protected abstract Data InitialData { get; }
 
-        void Start()
+        public virtual void Awake()
         {
-            job.data = new NativeArray<T>(1, Allocator.Persistent);
-            job.data[0] = InitialData;
+            jobKeepValues.MailBox = new NativeQueue<IntPtr>(Allocator.Persistent);
+            jobKeepValues.data = new NativeArray<Data>(1, Allocator.Persistent);
+            jobKeepValues.data[0] = InitialData;
+            jobKeepValues.Id = new Guid();
+
+            Manager.Instance.Components.Add(jobKeepValues);
         }
 
-        private void OnDestroy()
+        public virtual void OnDestroy()
         {
-            job.data.Dispose();
+            int? componentIndex = Manager.Instance.GetComponentIndex(jobKeepValues);
+            if(componentIndex.HasValue)
+            {
+                Manager.Instance.Components.RemoveAtSwapBack(componentIndex.Value);
+            }
+            
+            jobKeepValues.data.Dispose();
+            jobKeepValues.MailBox.Dispose();
+        }
+
+        public class Manager : IDisposable
+        {
+            public static Manager Instance = new Manager();
+            public List<JobKeepValues<Data>> Components { get; set; }
+
+            public Manager()
+            {
+                Components = new List<JobKeepValues<Data>>();
+            }
+
+            // Warning: O(n) function.
+            public int? GetComponentIndex(JobKeepValues<Data> toFind)
+            {
+                for (int i = 0; i < Components.Count; i++)
+                {
+                    if (toFind.data == Components[i].data)
+                    {
+                        return i;
+                    }
+                }
+
+                return null;
+            }
+
+            public void Dispose()
+            {
+                //Instance.Components.Dispose();
+            }
         }
     }
 
-    public abstract class MonoBehaviorJob<T> : MonoBehaviorCommon<T> where T : struct, IMonoBehaviorJob
+    public abstract class MonoBehaviorJob<Data> : MonoBehaviorCommon<Data>
+        where Data : struct, IMonoBehaviorData
     {
         JobHandle jobHandle;
 
-        void Update()
+        public virtual void Update()
         {
-            jobHandle = job.Schedule();
+            jobHandle = jobKeepValues.Schedule();
         }
 
-        private void LateUpdate()
+        public virtual void LateUpdate()
         {
             jobHandle.Complete();
         }
     }
 
-    public abstract class MonoBehaviorMainThread<T> : MonoBehaviorCommon<T> where T : struct, IMonoBehaviorJob
+    public abstract class MonoBehaviorMainThread<Data> : MonoBehaviorCommon<Data>
+        where Data : struct, IMonoBehaviorData
     {
-        void Update()
+        public virtual void Update()
         {
-            job.Execute();
+            jobKeepValues.Execute();
         }
     }
 }
