@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst;
-using Unity.Collections;
+﻿using Unity.Burst;
 using UnityEngine;
 
 
@@ -13,25 +10,28 @@ namespace Prototype
     }
 
     [System.Serializable]
-    public struct PlayerData : IMonoBehaviorData
+    public struct PlayerData
     {
         public int totalMoney;
         public Unity.Mathematics.Random random;
+    }
 
-        public void Execute()
+    public struct PlayerJob : IJobExecute<PlayerData>
+    {
+        public void Execute(ref JobProcessingArgs<PlayerData> args)
         {
-            if(random.NextInt(0,10) > 5)
+            if (args.data.random.NextInt(0, 10) > 5)
             {
-                Chest.Manager.Instance.Components[0].AddMessage(new PickupChestMessage());
+                args.SendMessage(Chest.Manager.Instance.Components[0].args.Id, new PickupChestMessage());
             }
         }
 
-        public void ProcessMessage(IMessage message)
+        public void ProcessMessage(ref JobProcessingArgs<PlayerData> args, IMessage message)
         {
             switch (message)
             {
                 case MoneyTransaction money:
-                    totalMoney += money.Amount;
+                    args.data.totalMoney += money.Amount;
                     break;
                 default:
                     Debug.Assert(false, "Wrong Mailbox or unsupported message!");
@@ -40,7 +40,7 @@ namespace Prototype
         }
     }
 
-    public class Player : MonoBehaviorJob<PlayerData>
+    public class Player : MonoBehaviorJob<PlayerData, PlayerJob>
     {
         public PlayerData initialPlayerData;
 

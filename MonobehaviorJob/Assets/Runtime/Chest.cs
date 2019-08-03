@@ -1,47 +1,46 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst;
+﻿using Unity.Burst;
 using UnityEngine;
 
 
 namespace Prototype
 {
-    //[BurstCompile]
     public struct PickupChestMessage : IMessage
     {
-        public void PickupChest(ref ChestData data)
+        public void PickupChest(ref JobProcessingArgs<ChestData> args)
         {
-            Player.Manager.Instance.Components[0].AddMessage(new MoneyTransaction() { Amount = data.moneyAmount });
-            data.moneyAmount = 0;
+            args.SendMessage(Player.Manager.Instance.Components[0].args.Id, new MoneyTransaction() { Amount = args.data.moneyAmount });
+            args.data.moneyAmount = 0;
         }
     }
 
     [System.Serializable]
-    //[BurstCompile]
-    public struct ChestData : IMonoBehaviorData
+    public struct ChestData
     {
         public int moneyAmount;
-        public void Execute()
+    }
+
+    public struct ChestJob : IJobExecute<ChestData>
+    {
+        public void Execute(ref JobProcessingArgs<ChestData> args)
         {
-            moneyAmount++;
+            args.data.moneyAmount++;
         }
 
-        public void ProcessMessage(IMessage message)
+        public void ProcessMessage(ref JobProcessingArgs<ChestData> args, IMessage message)
         {
             switch (message)
             {
                 case PickupChestMessage chest:
-                    chest.PickupChest(ref this);
+                    chest.PickupChest(ref args);
                     break;
                 default:
                     Debug.Assert(false, "Wrong Mailbox or unsupported message!");
                     break;
             }
         }
-        
     }
 
-    public class Chest : MonoBehaviorJob<ChestData>
+    public class Chest : MonoBehaviorJob<ChestData, ChestJob>
     {
         public ChestData initialInteractableData;
 

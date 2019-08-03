@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -17,25 +18,22 @@ namespace Prototype
         public int SomeBarValue;
     }
 
-    [System.Serializable]
-    public struct MonoBehaviorData : IMonoBehaviorData
+    public struct MonoBehaviourTestJob : IJobExecute<MonoBehaviorTestData>
     {
-        public int Bla;
-
-        public void Execute()
+        public void Execute(ref JobProcessingArgs<MonoBehaviorTestData> args)
         {
-            Bla++;
+            args.data.Bla++;
         }
 
-        public void ProcessMessage(IMessage message)
+        public void ProcessMessage(ref JobProcessingArgs<MonoBehaviorTestData> args, IMessage message)
         {
-            switch(message)
+            switch (message)
             {
                 case FooMessage foo:
-                    Bla += foo.SomeFooValue;
+                    args.data.Bla += foo.SomeFooValue;
                     break;
                 case BarMessage bar:
-                    Bla += bar.SomeBarValue;
+                    args.data.Bla += bar.SomeBarValue;
                     break;
                 default:
                     Debug.Assert(false, "Wrong Mailbox or unsupported message!");
@@ -44,11 +42,16 @@ namespace Prototype
         }
     }
 
-    //[BurstCompile]
-    //public class MonoBehaviorTest : MonoBehaviorMainThread<MonoBehaviorJob>
-    public class MonoBehaviorTest : MonoBehaviorJob<MonoBehaviorData>
+    [System.Serializable]
+    public struct MonoBehaviorTestData
     {
-        public MonoBehaviorData initialMonoBehaviorData;
-        protected override MonoBehaviorData InitialData { get { return initialMonoBehaviorData; } }
+        public int Bla;
+    }
+
+    //public class MonoBehaviorTest : MonoBehaviorMainThread<MonoBehaviorJob>
+    public class MonoBehaviorTest : MonoBehaviorJob<MonoBehaviorTestData, MonoBehaviourTestJob>
+    {
+        public MonoBehaviorTestData initialMonoBehaviorData;
+        protected override MonoBehaviorTestData InitialData { get { return initialMonoBehaviorData; } }
     }
 }
