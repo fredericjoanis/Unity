@@ -1,10 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using Unity.Burst;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Jobs;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Prototype
 {
@@ -20,12 +14,12 @@ namespace Prototype
 
     public struct MonoBehaviourTestJob : IJobExecute<MonoBehaviorTestData>
     {
-        public void Execute(ref JobProcessingArgs<MonoBehaviorTestData> args)
+        public void Execute(ref JobArguments<MonoBehaviorTestData> args)
         {
             args.data.Bla++;
         }
 
-        public void ProcessMessage(ref JobProcessingArgs<MonoBehaviorTestData> args, IMessage message)
+        public void ProcessMessage(ref JobArguments<MonoBehaviorTestData> args, IMessage message)
         {
             switch (message)
             {
@@ -51,7 +45,5 @@ namespace Prototype
     //public class MonoBehaviorTest : MonoBehaviorMainThread<MonoBehaviorJob>
     public class MonoBehaviorTest : MonoBehaviorJob<MonoBehaviorTestData, MonoBehaviourTestJob>
     {
-        public MonoBehaviorTestData initialMonoBehaviorData;
-        protected override MonoBehaviorTestData InitialData { get { return initialMonoBehaviorData; } }
     }
 }

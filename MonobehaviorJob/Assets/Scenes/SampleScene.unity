@@ -235,7 +235,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 856231ddee310a54885e665ad3af362b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPlayerData:
+  InitialData:
     totalMoney: 0
     random:
       state: 0
@@ -344,8 +344,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f265423f3af1ba4b8c57939d648b3db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialMonoBehaviorData:
-    Bla: 205
+  InitialData:
+    Bla: 0
 --- !u!65 &2049741572
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -430,5 +430,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3381315eb5bc81b4a94b70d4bd24f156, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialInteractableData:
-    moneyAmount: 83
+  InitialData:
+    moneyAmount: 0

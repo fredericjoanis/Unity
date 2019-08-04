@@ -8,18 +8,8 @@ using Unity.Burst;
 
 namespace Prototype
 {
-    public interface IMessage
-    {
-    }
-
-    public struct Message
-    {
-        public Guid componentGuid;
-        public IntPtr message;
-    }
-
     //[BurstCompile]
-    public struct JobProcessingArgs<Data> where Data : struct
+    public struct JobArguments<Data> where Data : struct
     {
         [ReadOnly] public Guid Id;
         [WriteOnly] public NativeQueue<Message> MessagesToSend;
@@ -37,8 +27,9 @@ namespace Prototype
 
     public interface IJobExecute<Data> where Data : struct
     {
-        void Execute(ref JobProcessingArgs<Data> args);
-        void ProcessMessage(ref JobProcessingArgs<Data> args, IMessage message);
+        void Execute(ref JobArguments<Data> args);
+
+        void ProcessMessage(ref JobArguments<Data> args, IMessage message);
     }
 
     public struct JobExecute<Data, Processing> : IJob
@@ -46,7 +37,7 @@ namespace Prototype
         where Processing : struct, IJobExecute<Data>
     {
         public NativeArray<Data> data;
-        public JobProcessingArgs<Data> args;
+        public JobArguments<Data> args;
         public Processing functionalProcessing;
         [ReadOnly] public NativeArray<IntPtr> MailBox;
 
@@ -77,82 +68,99 @@ namespace Prototype
         }
     }
 
-    public abstract class MonoBehaviorCommon<Data, Processing> : MonoBehaviour
-        where Data : struct
-        where Processing : struct, IJobExecute<Data>
+    public abstract class MonoBehaviorCommon<DataType, Processing> : MonoBehaviour
+        where DataType : struct
+        where Processing : struct, IJobExecute<DataType>
     {
-        protected JobExecute<Data, Processing> jobKeepValues;
+        protected JobExecute<DataType, Processing> jobExecute;
 
-        protected abstract Data InitialData { get; }
+        protected NativeArray<DataType> Data;
+        public DataType InitialData;
+        public List<IntPtr> MailBoxAsync;
 
         public virtual void Awake()
         {
-            jobKeepValues.data = new NativeArray<Data>(1, Allocator.Persistent);
-            jobKeepValues.data[0] = InitialData;
-            jobKeepValues.args = new JobProcessingArgs<Data>() { Id = Guid.NewGuid() };
-            
-            MailBoxManager.Instance.MailBoxes.Add(jobKeepValues.args.Id, new List<IntPtr>());
+            Data = new NativeArray<DataType>(1, Allocator.Persistent);
+            Data[0] = InitialData;
+            jobExecute.data = Data;
+            jobExecute.args = new JobArguments<DataType>() { Id = Guid.NewGuid() };
+            jobExecute.args.MessagesToSend = new NativeQueue<Message>(Allocator.Persistent);
+            MailBoxAsync = new List<IntPtr>();
 
-            Manager.Instance.Components.Add(jobKeepValues);
+            MailBoxManager.Instance.MailBoxes.Add(jobExecute.args.Id, new List<IntPtr>());
+
+            Manager.Instance.Components.Add(jobExecute);
         }
 
         public virtual void Update()
         {
-            List<IntPtr> messages;
-            MailBoxManager.Instance.MailBoxes.TryGetValue(jobKeepValues.args.Id, out messages);
+            MailBoxManager.Instance.MailBoxes.TryGetValue(jobExecute.args.Id, out List<IntPtr> messages);
 
-            if(jobKeepValues.MailBox.IsCreated)
+            MailBoxAsync.Clear();
+            MailBoxAsync.Capacity = messages.Count;
+
+            for(int i = 0; i < messages.Count; i++)
             {
-                jobKeepValues.MailBox.Dispose();
+                IMessage message = (IMessage)Marshal.GetObjectForIUnknown(messages[i]);
+                if (ProcessMessage(ref jobExecute.args, message) == MessageState.SendToJob)
+                {
+                    MailBoxAsync.Add(messages[i]);
+                }
             }
 
-            if (jobKeepValues.args.MessagesToSend.IsCreated)
+            if(jobExecute.MailBox.IsCreated)
             {
-                jobKeepValues.args.MessagesToSend.Dispose();
+                jobExecute.MailBox.Dispose();
             }
 
-            jobKeepValues.args.MessagesToSend = new NativeQueue<Message>(Allocator.TempJob);
-
-            jobKeepValues.MailBox = new NativeArray<IntPtr>(messages.Count, Allocator.TempJob);
-            jobKeepValues.MailBox.CopyFrom(messages.ToArray());
+            jobExecute.MailBox = new NativeArray<IntPtr>(MailBoxAsync.Count, Allocator.TempJob);
+            jobExecute.MailBox.CopyFrom(MailBoxAsync.ToArray());
             messages.Clear();
         }
 
         protected void ProcessMailbox()
         {
-            while (jobKeepValues.args.MessagesToSend.Count != 0)
+            while (jobExecute.args.MessagesToSend.Count != 0)
             {
-                Message message = jobKeepValues.args.MessagesToSend.Dequeue();
+                Message message = jobExecute.args.MessagesToSend.Dequeue();
                 MailBoxManager.Instance.MailBoxes[message.componentGuid].Add(message.message);
             }
         }
 
+        // If you need to work with the GameObject or call anything from the MainThread override this function.
+        public virtual MessageState ProcessMessage(ref JobArguments<DataType> args, IMessage message)
+        {
+            return MessageState.SendToJob;
+        }
+
         public virtual void OnDestroy()
         {
-            int? componentIndex = Manager.Instance.GetComponentIndex(jobKeepValues);
+            int? componentIndex = Manager.Instance.GetComponentIndex(jobExecute);
             if(componentIndex.HasValue)
             {
                 Manager.Instance.Components.RemoveAtSwapBack(componentIndex.Value);
             }
 
-            MailBoxManager.Instance.MailBoxes.Remove(jobKeepValues.args.Id);
+            MailBoxManager.Instance.MailBoxes.Remove(jobExecute.args.Id);
 
-            jobKeepValues.data.Dispose();
-            jobKeepValues.MailBox.Dispose();
+            jobExecute.data.Dispose();
+            jobExecute.MailBox.Dispose();
+            jobExecute.args.MessagesToSend.Dispose();
+            Data.Dispose();
         }
 
         public class Manager
         {
             public static Manager Instance = new Manager();
-            public List<JobExecute<Data, Processing>> Components { get; set; }
+            public List<JobExecute<DataType, Processing>> Components { get; set; }
 
             public Manager()
             {
-                Components = new List<JobExecute<Data, Processing>>();
+                Components = new List<JobExecute<DataType, Processing>>();
             }
 
             // Warning: O(n) function.
-            public int? GetComponentIndex(JobExecute<Data, Processing> toFind)
+            public int? GetComponentIndex(JobExecute<DataType, Processing> toFind)
             {
                 for (int i = 0; i < Components.Count; i++)
                 {
@@ -176,7 +184,7 @@ namespace Prototype
         public override void Update()
         {
             base.Update();
-            jobHandle = jobKeepValues.Schedule();
+            jobHandle = jobExecute.Schedule();
         }
 
         public virtual void LateUpdate()
@@ -192,7 +200,7 @@ namespace Prototype
     {
         public override void Update()
         {
-            jobKeepValues.Execute();
+            jobExecute.Execute();
             ProcessMailbox();
         }
     }

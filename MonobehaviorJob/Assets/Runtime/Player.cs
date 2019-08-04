@@ -1,4 +1,5 @@
 ﻿using Unity.Burst;
+using Unity.Collections;
 using UnityEngine;
 
 
@@ -18,7 +19,7 @@ namespace Prototype
 
     public struct PlayerJob : IJobExecute<PlayerData>
     {
-        public void Execute(ref JobProcessingArgs<PlayerData> args)
+        public void Execute(ref JobArguments<PlayerData> args)
         {
             if (args.data.random.NextInt(0, 10) > 5)
             {
@@ -26,7 +27,7 @@ namespace Prototype
             }
         }
 
-        public void ProcessMessage(ref JobProcessingArgs<PlayerData> args, IMessage message)
+        public void ProcessMessage(ref JobArguments<PlayerData> args, IMessage message)
         {
             switch (message)
             {
@@ -42,14 +43,12 @@ namespace Prototype
 
     public class Player : MonoBehaviorJob<PlayerData, PlayerJob>
     {
-        public PlayerData initialPlayerData;
-
-        protected override PlayerData InitialData => initialPlayerData;
-
         public override void Awake()
         {
-            initialPlayerData.random.InitState(38);
             base.Awake();
+            PlayerData playerData = Data[0];
+            playerData.random.InitState(38);
+            Data[0] = playerData;
         }
     }
 }
