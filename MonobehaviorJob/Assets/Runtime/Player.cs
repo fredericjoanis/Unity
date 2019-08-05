@@ -41,7 +41,7 @@ namespace Prototype
         }
     }
 
-    public class Player : MonoBehaviorJob<PlayerData, PlayerJob>
+    public class Player : MonoBehaviourJob<PlayerData, PlayerJob>
     {
         public override void Awake()
         {

@@ -25,16 +25,16 @@ namespace Prototype
         }
     }
 
-    public interface IJobExecute<Data> where Data : struct
+    public interface IJobExecute
     {
-        void Execute(ref JobArguments<Data> args);
+        void Execute();
 
-        void ProcessMessage(ref JobArguments<Data> args, IMessage message);
+        void ProcessMessage(IMessage message);
     }
 
-    public struct JobExecute<Data, Processing> : IJob
+    public struct JobExecute<Data, Processing>
         where Data : struct
-        where Processing : struct, IJobExecute<Data>
+        where Processing : struct, IJobExecute
     {
         public NativeArray<Data> data;
         public JobArguments<Data> args;
@@ -48,10 +48,10 @@ namespace Prototype
             for(int i = 0; i < MailBox.Length; i++)
             { 
                 IMessage message = (IMessage)Marshal.GetObjectForIUnknown(MailBox[i]);
-                functionalProcessing.ProcessMessage(ref args, message);
+                functionalProcessing.ProcessMessage(message);
             }
 
-            functionalProcessing.Execute(ref args);
+            functionalProcessing.Execute();
 
             data[0] = args.data;
         }
@@ -68,9 +68,9 @@ namespace Prototype
         }
     }
 
-    public abstract class MonoBehaviorCommon<DataType, Processing> : MonoBehaviour
+    public abstract class MonoBehaviourJob<DataType, Processing> : MonoBehaviour
         where DataType : struct
-        where Processing : struct, IJobExecute<DataType>
+        where Processing : struct, IJobExecute
     {
         protected JobExecute<DataType, Processing> jobExecute;
 
@@ -172,36 +172,6 @@ namespace Prototype
 
                 return null;
             }
-        }
-    }
-
-    public abstract class MonoBehaviorJob<Data, Processing> : MonoBehaviorCommon<Data, Processing>
-        where Data : struct
-        where Processing : struct, IJobExecute<Data>
-    {
-        JobHandle jobHandle;
-
-        public override void Update()
-        {
-            base.Update();
-            jobHandle = jobExecute.Schedule();
-        }
-
-        public virtual void LateUpdate()
-        {
-            jobHandle.Complete();
-            ProcessMailbox();
-        }
-    }
-
-    public abstract class MonoBehaviorMainThread<Data, Processing> : MonoBehaviorCommon<Data, Processing>
-        where Data : struct
-        where Processing : struct, IJobExecute<Data>
-    {
-        public override void Update()
-        {
-            jobExecute.Execute();
-            ProcessMailbox();
         }
     }
 }

@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   InitialData:
-    totalMoney: 0
+    totalMoney: 184
     random:
       state: 0
 --- !u!65 &747128716

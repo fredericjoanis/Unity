@@ -39,7 +39,7 @@ namespace Prototype
         }
     }
 
-    public class Chest : MonoBehaviorJob<ChestData, ChestJob>
+    public class Chest : MonoBehaviourJob<ChestData, ChestJob>
     {
     }
 }

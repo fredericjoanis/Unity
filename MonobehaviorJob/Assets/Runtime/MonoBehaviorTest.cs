@@ -43,7 +43,7 @@ namespace Prototype
     }
 
     //public class MonoBehaviorTest : MonoBehaviorMainThread<MonoBehaviorJob>
-    public class MonoBehaviorTest : MonoBehaviorJob<MonoBehaviorTestData, MonoBehaviourTestJob>
+    public class MonoBehaviorTest : MonoBehaviourJob<MonoBehaviorTestData, MonoBehaviourTestJob>
     {
     }
 }
