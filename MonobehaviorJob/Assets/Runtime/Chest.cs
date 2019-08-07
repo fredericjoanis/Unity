@@ -1,36 +1,35 @@
-﻿using UnityEngine;
+﻿using System.Runtime.InteropServices;
+using UnityEngine;
 
 
 namespace Prototype
 {
-    public struct PickupChestMessage : IMessage
-    {
-        public void PickupChest(ref JobArguments<ChestData> args)
-        {
-            args.SendMessage(Player.Manager.Instance.Components[0].args.Id, new MoneyTransaction() { Amount = args.data.moneyAmount });
-            args.data.moneyAmount = 0;
-        }
-    }
-
     [System.Serializable]
     public struct ChestData
     {
         public int moneyAmount;
     }
 
-    public struct ChestJob : IJobExecute<ChestData>
+    public class ChestManager : Manager<ChestData, Chest>
     {
-        public void Execute(ref JobArguments<ChestData> args)
+        public void PickupChest(ref MonoBehaviourJobData monoBehaviorJobData)
         {
-            args.data.moneyAmount++;
+            MoneyTransaction moneyTransaction = new MoneyTransaction() { Amount = monoBehaviorJobData.UserData.moneyAmount };
+            SendMessage(ref monoBehaviorJobData, PlayerManager.Instance.Data[0].guid, new Message() { messageEnum = MessageEnum.MoneyTransaction, moneyTransaction = moneyTransaction });
+            monoBehaviorJobData.UserData.moneyAmount = 0;
         }
 
-        public void ProcessMessage(ref JobArguments<ChestData> args, IMessage message)
+        public override void Update(ref MonoBehaviourJobData monoBehaviorJobData)
         {
-            switch (message)
+            monoBehaviorJobData.UserData.moneyAmount++;
+        }
+
+        public override void ProcessMessage(ref MonoBehaviourJobData monoBehaviorJobData, Message message)
+        {
+            switch (message.messageEnum)
             {
-                case PickupChestMessage chest:
-                    chest.PickupChest(ref args);
+                case MessageEnum.PickupChest:
+                    PickupChest(ref monoBehaviorJobData);
                     break;
                 default:
                     Debug.Assert(false, "Wrong Mailbox or unsupported message!");
@@ -39,7 +38,7 @@ namespace Prototype
         }
     }
 
-    public class Chest : MonoBehaviorJob<ChestData, ChestJob>
+    public class Chest : MonoBehaviourJob<ChestData>
     {
     }
 }

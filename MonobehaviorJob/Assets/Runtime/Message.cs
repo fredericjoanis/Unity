@@ -1,17 +1,21 @@
-﻿using System;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using UnityEngine;
 
-public interface IMessage
+namespace Prototype
 {
-}
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct Message
+    {
+        [FieldOffset(0)]
+        public MessageEnum messageEnum;
+    }
 
-public struct Message
-{
-    public Guid componentGuid;
-    public IntPtr message;
-}
-
-public enum MessageState
-{
-    Processed,
-    SendToJob
+    public enum MessageEnum : short
+    {
+        None,
+        PickupChest,
+        MoneyTransaction
+    }
 }

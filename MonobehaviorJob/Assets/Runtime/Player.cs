@@ -1,13 +1,20 @@
-﻿using Unity.Burst;
+﻿using System.Runtime.InteropServices;
+using Unity.Burst;
 using Unity.Collections;
 using UnityEngine;
 
 
 namespace Prototype
 {
-    public struct MoneyTransaction : IMessage
+    public struct MoneyTransaction
     {
         public int Amount;
+    }
+
+    public partial struct Message
+    {
+        [FieldOffset(2)]
+        public MoneyTransaction moneyTransaction;
     }
 
     [System.Serializable]
@@ -17,38 +24,39 @@ namespace Prototype
         public Unity.Mathematics.Random random;
     }
 
-    public struct PlayerJob : IJobExecute<PlayerData>
+    public class PlayerManager : Manager<PlayerData, Player>
     {
-        public void Execute(ref JobArguments<PlayerData> args)
-        {
-            if (args.data.random.NextInt(0, 10) > 5)
-            {
-                args.SendMessage(Chest.Manager.Instance.Components[0].args.Id, new PickupChestMessage());
-            }
-        }
 
-        public void ProcessMessage(ref JobArguments<PlayerData> args, IMessage message)
+        public override void ProcessMessage(ref MonoBehaviourJobData monoBehaviorJobData, Message message)
         {
-            switch (message)
+            switch (message.messageEnum)
             {
-                case MoneyTransaction money:
-                    args.data.totalMoney += money.Amount;
+                case MessageEnum.PickupChest:
+                    monoBehaviorJobData.UserData.totalMoney += message.moneyTransaction.Amount;
                     break;
                 default:
                     Debug.Assert(false, "Wrong Mailbox or unsupported message!");
                     break;
             }
         }
+
+        public override void Update(ref MonoBehaviourJobData monoBehaviorJobData)
+        {
+            if (monoBehaviorJobData.UserData.random.NextInt(0, 10) > 5)
+            {
+                SendMessage(ref monoBehaviorJobData, ChestManager.Instance.Data[0].guid, new Message() { messageEnum = MessageEnum.PickupChest });
+            }
+        }
     }
 
-    public class Player : MonoBehaviorJob<PlayerData, PlayerJob>
+    public class Player : MonoBehaviourJob<PlayerData>
     {
         public override void Awake()
         {
             base.Awake();
-            PlayerData playerData = Data[0];
+            PlayerData playerData = InitialData;
             playerData.random.InitState(38);
-            Data[0] = playerData;
+            InitialData = playerData;
         }
     }
 }
