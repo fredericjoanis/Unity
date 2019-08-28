@@ -2,15 +2,15 @@
 using UnityEngine;
 
 [RequiresEntityConversion]
-public class ECS<TData> : MonoBehaviour, IConvertGameObjectToEntity
-    where TData : struct, IComponentData
+public abstract class ECS<TComponentData> : MonoBehaviour, IConvertGameObjectToEntity
+    where TComponentData : struct, IComponentData
 {
-    [SerializeField] protected TData EntityData;
+    [SerializeField] protected TComponentData ComponentData;
     public Entity Entity { get; private set; }
 
     public virtual void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         Entity = entity;
-        dstManager.AddComponentData(entity, EntityData);
+        dstManager.AddComponentData(entity, ComponentData);
     }
 }
