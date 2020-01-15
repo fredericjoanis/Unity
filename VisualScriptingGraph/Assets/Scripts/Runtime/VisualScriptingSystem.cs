@@ -8,48 +8,6 @@ using UnityEngine;
 using static Unity.Mathematics.math;
 
 /*
-public struct Node : IComponentData
-{
-   // FunctionPointer<>
-}
-
-public struct NodeActivatedTag : IComponentData
-{
-}
-
-[GenerateAuthoringComponent]
-public struct OnStartData : IComponentData
-{
-    
-}
-
-[GenerateAuthoringComponent]
-public struct OnStartInputs : IComponentData
-{
-
-}
-
-[GenerateAuthoringComponent]
-public struct WaitInputs : IComponentData
-{
-    public Edge trigger;
-    public EdgeFloat time;
-    float defaultTime;
-}
-
-[GenerateAuthoringComponent]
-public struct SetFloatData : IComponentData
-{
-    public float floatValue;
-}
-
-[GenerateAuthoringComponent]
-public struct SetFloatInputs : IComponentData
-{
-    public Edge trigger;
-}
-
-
 // Instruct Burst to look for static methods with [BurstCompile] attribute
 [BurstCompile]
 public class NodeImplementation

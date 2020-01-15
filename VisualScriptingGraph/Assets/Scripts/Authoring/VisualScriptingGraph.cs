@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -12,6 +11,16 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        //dstManager.AddComponentData(entity, new VisualScriptingGraphTag());
+        foreach(var node in nodes)
+        {
+            Entity entityNode = conversionSystem.EntityManager.CreateEntity();
+            node.Convert(entityNode, dstManager, conversionSystem);
+        }
+
+        foreach (var edge in edges)
+        {
+            Entity entityEdge = conversionSystem.EntityManager.CreateEntity();
+            edge.Convert(entityEdge, dstManager, conversionSystem);
+        }
     }
 }

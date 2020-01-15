@@ -6,9 +6,14 @@ using UnityEngine;
 [Serializable]
 public struct EdgeRuntime : IComponentData
 {
-    public bool isActive;
     public Entity FromNode;
     public Entity ToNode;
+}
+
+[Serializable]
+public struct EdgeFloat : IComponentData
+{
+    public float value;
 }
 
 
