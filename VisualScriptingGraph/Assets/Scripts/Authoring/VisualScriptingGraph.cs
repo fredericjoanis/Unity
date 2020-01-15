@@ -1,6 +1,12 @@
 ﻿using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using UnityEngine;
+
+public struct VisualScriptingGraphTag : IComponentData
+{
+}
 
 [DisallowMultipleComponent]
 [RequiresEntityConversion]
@@ -11,6 +17,7 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
+        /*
         foreach(var node in nodes)
         {
             Entity entityNode = conversionSystem.EntityManager.CreateEntity();
@@ -22,5 +29,7 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
             Entity entityEdge = conversionSystem.EntityManager.CreateEntity();
             edge.Convert(entityEdge, dstManager, conversionSystem);
         }
+        */
     }
 }
+
