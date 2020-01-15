@@ -16,14 +16,19 @@ public class WaitSystem : JobComponentSystem
     private static ComponentDataFromEntity<WaitComponentData> WaitComponents;
 
     [BurstCompile]
-    public static void Update(ref Entity entity, ref NodeRuntime nodeRuntime, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void Update(ref Entity entity, ref VisualScriptingSystem.VisualScriptingExecution system)
     {
 
     }
 
     [BurstCompile]
-    public static void InputTrigger(ref Entity inputTriggered, ref NodeRuntime nodeRuntime, ref InputTriggerValue inputTrigger, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void InputTrigger(ref TriggerData socketValue, ref VisualScriptingSystem.VisualScriptingExecution system)
     {
+    }
+
+    protected override void OnCreate()
+    {
+        WaitComponents = GetComponentDataFromEntity<WaitComponentData>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -48,6 +53,10 @@ public class Wait : Node
             FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(WaitSystem.InputTrigger),
         });
 
-        dstManager.AddComponentData(entity, new WaitComponentData() { TriggeredTime = 0, WaitTime = WaitTime.DefaultValue });
+        dstManager.AddComponentData(entity, new WaitComponentData()
+        {
+            TriggeredTime = 0,
+            WaitTime = WaitTime.DefaultValue,
+        });
     }
 }

@@ -20,8 +20,13 @@ public class ConsoleLogSystem : JobComponentSystem
     }
 
     [BurstCompile]
-    public static void InputTrigger(ref Entity inputTriggered, ref NodeRuntime nodeRuntime, ref InputTriggerValue inputTrigger, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void InputTrigger(ref TriggerData socket, ref VisualScriptingSystem.VisualScriptingExecution system)
     {
+    }
+
+    protected override void OnCreate()
+    {
+        ConsoleLogComponents = GetComponentDataFromEntity<ConsoleLogComponentData>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)

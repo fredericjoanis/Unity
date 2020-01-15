@@ -16,14 +16,19 @@ public class SetFloatSystem : JobComponentSystem
     private static ComponentDataFromEntity<SetFloatComponentData> SetFloatComponents;
 
     [BurstCompile]
-    public static void Update(ref Entity entity, ref NodeRuntime nodeRuntime, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void Update(ref Entity entity, ref VisualScriptingSystem.VisualScriptingExecution system)
     {
 
     }
 
     [BurstCompile]
-    public static void InputTrigger(ref Entity inputTriggered, ref NodeRuntime nodeRuntime, ref InputTriggerValue inputTrigger, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void InputTrigger(ref Entity inputTriggered, ref TriggerData socketValue, ref VisualScriptingSystem.VisualScriptingExecution system)
     {
+    }
+
+    protected override void OnCreate()
+    {
+        SetFloatComponents = GetComponentDataFromEntity<SetFloatComponentData>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -49,7 +54,7 @@ public class SetFloat : Node
         {
             NodeType = NodeTypeEnum.SetFloat,
             FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(SetFloatSystem.Update),
-            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(SetFloatSystem.InputTrigger),
+            //FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(SetFloatSystem.InputTrigger),
         });
         dstManager.AddComponentData(entity, new SetFloatComponentData() { value = Value.DefaultValue });
     }

@@ -3,29 +3,28 @@ using Unity.Entities;
 using UnityEngine;
 
 
-[Serializable]
 public struct EdgeRuntime : IComponentData
 {
-    public Entity FromNode;
-    public Entity ToNode;
+    public SocketRuntime SocketInput;
+    public SocketRuntime SocketOutput;
 }
-
-[Serializable]
-public struct EdgeFloat : IComponentData
-{
-    public float value;
-}
-
 
 [Serializable]
 [RequiresEntityConversion]
-public class Edge : MonoBehaviour, IConvertGameObjectToEntity
+public class Edge : MonoBehaviour
 {
     public SocketInput SocketInput;
     public SocketOutput SocketOutput;
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
+        var Sockets = conversionSystem.GetComponentDataFromEntity<SocketRuntime>();
 
+
+        dstManager.AddComponentData(entity, new EdgeRuntime()
+        {
+           
+        });
     }
+
 }

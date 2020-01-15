@@ -8,6 +8,11 @@ public struct VisualScriptingGraphTag : IComponentData
 {
 }
 
+public struct NodeSharedComponentData : ISharedComponentData
+{
+    public Entity Graph;
+}
+
 [DisallowMultipleComponent]
 [RequiresEntityConversion]
 public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
@@ -17,11 +22,11 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        /*
         foreach(var node in nodes)
         {
             Entity entityNode = conversionSystem.EntityManager.CreateEntity();
             node.Convert(entityNode, dstManager, conversionSystem);
+            dstManager.AddSharedComponentData(entityNode, new NodeSharedComponentData { Graph = entity });
         }
 
         foreach (var edge in edges)
@@ -29,7 +34,8 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
             Entity entityEdge = conversionSystem.EntityManager.CreateEntity();
             edge.Convert(entityEdge, dstManager, conversionSystem);
         }
-        */
+
+        dstManager.AddComponentData(entity, new VisualScriptingGraphTag());
     }
 }
 
