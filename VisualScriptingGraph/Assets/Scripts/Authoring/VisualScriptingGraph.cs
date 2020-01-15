@@ -25,7 +25,7 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
         foreach(var node in nodes)
         {
             Entity entityNode = conversionSystem.EntityManager.CreateEntity();
-            node.Convert(entityNode, dstManager, conversionSystem);
+            node.Convert(entityNode, dstManager, conversionSystem, entity);
             dstManager.AddSharedComponentData(entityNode, new NodeSharedComponentData { Graph = entity });
         }
 

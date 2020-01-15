@@ -44,7 +44,7 @@ public class Wait : Node
     public SocketInputFloat WaitTime;
     public SocketOutputSignal Output;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity NodeEntity)
     {
         dstManager.AddComponentData(entity, new NodeRuntime()
         {

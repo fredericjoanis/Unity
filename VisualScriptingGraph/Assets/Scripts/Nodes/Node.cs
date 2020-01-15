@@ -5,7 +5,7 @@ using UnityEngine;
 [RequiresEntityConversion]
 public abstract class Node : MonoBehaviour
 {
-    public abstract void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem);
+    public abstract void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity);
 }
 
 public enum NodeTypeEnum

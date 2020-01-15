@@ -5,8 +5,18 @@ using UnityEngine;
 [RequiresEntityConversion]
 public abstract class SocketInput : MonoBehaviour
 {
-    public Entity Entity;
-    public Entity NodeEntity;
-
+    public Socket Socket;
     public abstract SocketType GetSocketType();
+
+    public Socket ConvertToSocketRuntime(Entity nodeEntity, Entity socketEntity)
+    {
+        Socket = new Socket()
+        {
+            SocketType = GetSocketType(),
+            SocketEntity = socketEntity,
+            NodeEntity = nodeEntity
+        };
+
+        return Socket;
+    }
 }

@@ -11,8 +11,6 @@ using static Unity.Mathematics.math;
 [BurstCompile]
 public class VisualScriptingSystem : JobComponentSystem
 {
-    
-
     [BurstCompile]
     public struct VisualScriptingExecution : IJob
     {
@@ -108,13 +106,13 @@ public class VisualScriptingSystem : JobComponentSystem
                 for (int indexTrigger = 0; indexTrigger < InputsToTrigger.Length; indexTrigger++)
                 {
                     TriggerData socketTrigger = InputsToTrigger[indexTrigger];
-                    NodeRuntime[socketTrigger.SocketRuntime.NodeEntity].FunctionPointerInputTrigger.Invoke(ref socketTrigger, ref this);
+                    NodeRuntime[socketTrigger.Socket.NodeEntity].FunctionPointerInputTrigger.Invoke(ref socketTrigger, ref this);
                 }
 
                 InputsToTrigger.Clear();
 
                 TriggerData socket = InputsToTrigger[indexSignal];
-                NodeRuntime[socket.SocketRuntime.NodeEntity].FunctionPointerInputTrigger.Invoke(ref socket, ref this);
+                NodeRuntime[socket.Socket.NodeEntity].FunctionPointerInputTrigger.Invoke(ref socket, ref this);
             }
 
             InputsToTriggerSignal.Clear();
@@ -145,81 +143,81 @@ public class VisualScriptingSystem : JobComponentSystem
 
         #region OutputTriggers
         [BurstCompile]
-        public void OutputTrigger(ref SocketRuntime socketOutput)
+        public void OutputTrigger(ref Socket socketOutput)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for(int i = 0; i < edgesEntities.Length; i++)
             {
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
                 
-                TriggerData val = new TriggerData() { SocketRuntime = edge.SocketInput };
+                TriggerData val = new TriggerData() { Socket = edge.SocketInput };
                 InputsToTriggerSignal.Add(val);
             }
         }
         
-        public void OutputTrigger(ref SocketRuntime socketOutput, float value)
+        public void OutputTrigger(ref Socket socketOutput, float value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
             {
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
-                TriggerData val = new TriggerData() { SocketRuntime = edge.SocketInput };
+                TriggerData val = new TriggerData() { Socket = edge.SocketInput };
                 TriggerData.ConvertData(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
 
-        public void OutputTrigger(ref SocketRuntime socketOutput, int value)
+        public void OutputTrigger(ref Socket socketOutput, int value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
             {
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
-                TriggerData val = new TriggerData() { SocketRuntime = edge.SocketInput };
+                TriggerData val = new TriggerData() { Socket = edge.SocketInput };
                 TriggerData.ConvertData(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
 
-        public void OutputTrigger(ref SocketRuntime socketOutput, Vector2 value)
+        public void OutputTrigger(ref Socket socketOutput, Vector2 value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
             {
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
-                TriggerData val = new TriggerData() { SocketRuntime = edge.SocketInput };
+                TriggerData val = new TriggerData() { Socket = edge.SocketInput };
                 TriggerData.ConvertData(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
 
-        public void OutputTrigger(ref SocketRuntime socketOutput, Vector3 value)
+        public void OutputTrigger(ref Socket socketOutput, Vector3 value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
             {
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
-                TriggerData val = new TriggerData() { SocketRuntime = edge.SocketInput };
+                TriggerData val = new TriggerData() { Socket = edge.SocketInput };
                 TriggerData.ConvertData(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
-        public void OutputTrigger(ref SocketRuntime socketOutput, Vector4 value)
+        public void OutputTrigger(ref Socket socketOutput, Vector4 value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
             {
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
-                TriggerData val = new TriggerData() { SocketRuntime = edge.SocketInput };
+                TriggerData val = new TriggerData() { Socket = edge.SocketInput };
                 TriggerData.ConvertData(ref val, ref value);
 
                 InputsToTrigger.Add(val);

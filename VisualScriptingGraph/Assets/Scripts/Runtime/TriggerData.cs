@@ -1,33 +1,14 @@
-﻿using System.Runtime.InteropServices;
+﻿
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Entities;
 using UnityEngine;
-
-public struct SocketRuntime : IComponentData
-{
-    public Entity SocketEntity;
-    public Entity NodeEntity;
-    public SocketType SocketType;
-}
-
-public enum SocketType : System.UInt16
-{
-    Undefined,
-    Signal,
-    Int,
-    Float,
-    Vector2,
-    Vector3,
-    Vector4,
-    Entity,
-    BlobString,
-}
 
 [StructLayout(LayoutKind.Explicit)]
 public struct TriggerData : IComponentData
 {
     [FieldOffset(0)]
-    public SocketRuntime SocketRuntime;
+    public Socket Socket;
 
     [FieldOffset(18)]
     public int IntValue;
@@ -53,14 +34,14 @@ public struct TriggerData : IComponentData
     [BurstCompile]
     public static void ConvertData(ref TriggerData triggerData, ref float data)
     {
-        switch(triggerData.SocketRuntime.SocketType)
+        switch (triggerData.Socket.SocketType)
         {
             case SocketType.Float:
                 triggerData.FloatValue = data;
-            break;
+                break;
             case SocketType.Int:
                 triggerData.IntValue = (int)data;
-            break;
+                break;
             case SocketType.Vector2:
                 triggerData.Vector2 = new Vector2(data, 0);
                 break;
@@ -76,7 +57,7 @@ public struct TriggerData : IComponentData
     [BurstCompile]
     public static void ConvertData(ref TriggerData triggerData, ref int data)
     {
-        switch (triggerData.SocketRuntime.SocketType)
+        switch (triggerData.Socket.SocketType)
         {
             case SocketType.Float:
                 triggerData.FloatValue = data;
@@ -99,7 +80,7 @@ public struct TriggerData : IComponentData
     [BurstCompile]
     public static void ConvertData(ref TriggerData triggerData, ref Vector2 data)
     {
-        switch (triggerData.SocketRuntime.SocketType)
+        switch (triggerData.Socket.SocketType)
         {
             case SocketType.Float:
                 triggerData.FloatValue = data.x;
@@ -122,7 +103,7 @@ public struct TriggerData : IComponentData
     [BurstCompile]
     public static void ConvertData(ref TriggerData triggerData, ref Vector3 data)
     {
-        switch (triggerData.SocketRuntime.SocketType)
+        switch (triggerData.Socket.SocketType)
         {
             case SocketType.Float:
                 triggerData.FloatValue = data.x;
@@ -145,7 +126,7 @@ public struct TriggerData : IComponentData
     [BurstCompile]
     public static void ConvertData(ref TriggerData triggerData, ref Vector4 data)
     {
-        switch (triggerData.SocketRuntime.SocketType)
+        switch (triggerData.Socket.SocketType)
         {
             case SocketType.Float:
                 triggerData.FloatValue = data.x;

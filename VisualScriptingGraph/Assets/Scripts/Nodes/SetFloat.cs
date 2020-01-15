@@ -44,12 +44,8 @@ public class SetFloat : Node
     public SocketInputFloat Value;
     public SocketOutputFloat Output;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
-        Entity socketTrigger = dstManager.CreateEntity();
-        Entity socketValue = dstManager.CreateEntity();
-        Entity socketOutput = dstManager.CreateEntity();
-
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.SetFloat,

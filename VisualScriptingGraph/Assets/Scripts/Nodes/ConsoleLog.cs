@@ -42,13 +42,14 @@ public class ConsoleLog : Node
     public SocketInputString String;
     public SocketOutputSignal Output;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.ConsoleLog,
             FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(ConsoleLogSystem.InputTrigger),
         });
+
         dstManager.AddComponentData(entity, new ConsoleLogComponentData() { });
     }
 }

@@ -5,7 +5,7 @@ using Unity.Jobs;
 
 public struct StartComponentData : IComponentData
 {
-    public SocketRuntime Output;
+    public Socket Output;
 }
 
 [BurstCompile]
@@ -47,7 +47,7 @@ public class Start : Node
     [NativeDisableParallelForRestrictionAttribute]
     private static ComponentDataFromEntity<StartComponentData> StartComponents;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
@@ -58,7 +58,7 @@ public class Start : Node
 
         dstManager.AddComponentData(entity, new StartComponentData()
         {
-            Output = new SocketRuntime() { SocketEntity = dstManager.CreateEntity() }
+            Output = Output.ConvertToSocketRuntime(nodeEntity, entity)
         });
     }
 }
