@@ -38,16 +38,17 @@ public class Start : Node
 
     public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
+        StartComponentData componentData = new StartComponentData()
+        {
+            Output = Output.ConvertToSocketRuntime(nodeEntity, entity)
+        };
+        
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.Start,
             FunctionPointerInitialize = BurstCompiler.CompileFunctionPointer<NodeRuntime.Initialize>(StartFunctions.Initialize),
             FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(StartFunctions.Update),
-        });
-
-        dstManager.AddComponentData(entity, new StartComponentData()
-        {
-            Output = Output.ConvertToSocketRuntime(nodeEntity, entity)
+            NodeData = new NodeData() { StartComponentData = componentData }
         });
     }
 }

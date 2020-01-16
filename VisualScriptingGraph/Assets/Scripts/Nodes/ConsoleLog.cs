@@ -1,7 +1,5 @@
 ﻿using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
 
 public struct ConsoleLogComponentData : IComponentData
 {
@@ -37,12 +35,13 @@ public class ConsoleLog : Node
 
     public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
+        ConsoleLogComponentData componentData = new ConsoleLogComponentData() { };
+        
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.ConsoleLog,
             FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(ConsoleLogFunctions.InputTrigger),
+            NodeData = new NodeData() { ConsoleLogComponentData = componentData }
         });
-
-        dstManager.AddComponentData(entity, new ConsoleLogComponentData() { });
     }
 }

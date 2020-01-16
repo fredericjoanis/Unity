@@ -39,13 +39,16 @@ public class SetFloat : Node
 
     public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
+        SetFloatComponentData componentData = new SetFloatComponentData() { value = Value.DefaultValue };
+        
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.SetFloat,
             FunctionPointerGetNodeType = BurstCompiler.CompileFunctionPointer<NodeRuntime.GetNodeType>(WaitFunctions.GetNodeType),
             FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(SetFloatFunctions.Update),
-            //FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(SetFloatSystem.InputTrigger),
+            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(SetFloatFunctions.InputTrigger),
+            NodeData = new NodeData() {SetFloatComponentData = componentData }
         });
-        dstManager.AddComponentData(entity, new SetFloatComponentData() { value = Value.DefaultValue });
+        
     }
 }

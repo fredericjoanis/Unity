@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\Users\fjoanis\.Rider2019.3\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\fjoanis\.Rider2019.3\system\resharper-host\local\Transient\ReSharperHost\v193\SolutionCaches\_VisualScriptingGraph.-2128176963.00" t="ExcludeRecursive" />
+    <e p="C:\Users\fjoanis\Desktop\VS\Unity\VisualScriptingGraph" t="IncludeRecursive">
+      <e p="Assembly-CSharp-Editor.csproj" t="IncludeRecursive" />
+      <e p="Assembly-CSharp.csproj" t="IncludeRecursive" />
+      <e p="Assets" t="Include">
+        <e p="Scripts" t="Include">
+          <e p="Authoring" t="Include">
+            <e p="Edge.cs" t="Include" />
+            <e p="SocketInputs" t="Include">
+              <e p="SocketInput.cs" t="Include" />
+              <e p="SocketInputFloat.cs" t="Include" />
+              <e p="SocketInputGameObject.cs" t="Include" />
+              <e p="SocketInputInt.cs" t="Include" />
+              <e p="SocketInputSignal.cs" t="Include" />
+              <e p="SocketInputString.cs" t="Include" />
+              <e p="SocketInputVector2.cs" t="Include" />
+              <e p="SocketInputVector3.cs" t="Include" />
+              <e p="SocketInputVector4.cs" t="Include" />
+            </e>
+            <e p="SocketOutputs" t="Include">
+              <e p="SocketOutput.cs" t="Include" />
+              <e p="SocketOutputFloat.cs" t="Include" />
+              <e p="SocketOutputGameObject.cs" t="Include" />
+              <e p="SocketOutputInt.cs" t="Include" />
+              <e p="SocketOutputSignal.cs" t="Include" />
+              <e p="SocketOutputString.cs" t="Include" />
+              <e p="SocketOutputVector2.cs" t="Include" />
+              <e p="SocketOutputVector3.cs" t="Include" />
+              <e p="SocketOutputVector4.cs" t="Include" />
+            </e>
+            <e p="VisualScriptingGraph.cs" t="Include" />
+          </e>
+          <e p="Nodes" t="Include">
+            <e p="ConsoleLog.cs" t="Include" />
+            <e p="Node.cs" t="Include" />
+            <e p="SetFloat.cs" t="Include" />
+            <e p="Start.cs" t="Include" />
+            <e p="Wait.cs" t="Include" />
+          </e>
+          <e p="Runtime" t="Include">
+            <e p="Socket.cs" t="Include" />
+            <e p="TriggerData.cs" t="Include" />
+            <e p="VisualScriptingSystem.cs" t="Include" />
+          </e>
+        </e>
+        <e p="TutorialInfo" t="Include">
+          <e p="Scripts" t="Include">
+            <e p="Editor" t="Include">
+              <e p="ReadmeEditor.cs" t="Include" />
+            </e>
+            <e p="Readme.cs" t="Include" />
+          </e>
+        </e>
+      </e>
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="Packages" t="ExcludeRecursive" />
+      <e p="Temp\bin" t="ExcludeRecursive" />
+      <e p="VisualScriptingGraph.sln" t="IncludeFlat" />
+    </e>
+  </component>
+</project>

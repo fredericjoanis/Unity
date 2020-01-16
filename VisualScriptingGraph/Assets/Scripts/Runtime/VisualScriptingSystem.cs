@@ -16,76 +16,82 @@ public struct GraphContext
 
     public int _TriggerOutput;
     public TriggerData TriggerData;
+}
 
-    public void ProcessEachFrame()
+public static class GraphContextExt
+{
+    public static void ProcessEachFrame(ref this GraphContext graphContext)
     {
-        _ProcessEachFrame = 1;
-    }
-
-    public void StopProcessEachFrame()
-    {
-        _StopProcessEachFrame = 1;
+        graphContext._ProcessEachFrame = 1;
     }
 
-    public void OutputTrigger(ref Socket socket)
+    public static void StopProcessEachFrame(ref this GraphContext graphContext)
     {
-        _TriggerOutput = 1;
-        TriggerData.Socket = socket;
+        graphContext._StopProcessEachFrame = 1;
     }
-    public void OutputTrigger(ref Socket socket, float value)
+
+    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket)
     {
-        _TriggerOutput = 1;
-        TriggerData.Socket = socket;
-        if (TriggerData.Socket.SocketType != SocketType.Float)
+        graphContext._TriggerOutput = 1;
+        graphContext.TriggerData.Socket = socket;
+    }
+
+    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, float value)
+    {
+        graphContext._TriggerOutput = 1;
+        graphContext.TriggerData.Socket = socket;
+        if (graphContext.TriggerData.Socket.SocketType != SocketType.Float)
         {
             // More Error handling here
-            TriggerData.Socket.SocketType = SocketType.Float;
+            graphContext.TriggerData.Socket.SocketType = SocketType.Float;
         }
-        TriggerData.FloatValue = value;
+        graphContext.TriggerData.FloatValue = value;
     }
-    public void OutputTrigger(ref Socket socket, int value)
+
+    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, int value)
     {
-        _TriggerOutput = 1;
-        TriggerData.Socket = socket;
-        if (TriggerData.Socket.SocketType != SocketType.Int)
+        graphContext._TriggerOutput = 1;
+        graphContext.TriggerData.Socket = socket;
+        if (graphContext.TriggerData.Socket.SocketType != SocketType.Int)
         {
             // More Error handling here
-            TriggerData.Socket.SocketType = SocketType.Int;
+            graphContext.TriggerData.Socket.SocketType = SocketType.Int;
         }
-        TriggerData.IntValue = value;
+        graphContext.TriggerData.IntValue = value;
     }
-    public void OutputTrigger(ref Socket socket, Vector2 value)
+    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, Vector2 value)
     {
-        _TriggerOutput = 1;
-        TriggerData.Socket = socket;
-        if (TriggerData.Socket.SocketType != SocketType.Vector2)
+        graphContext._TriggerOutput = 1;
+        graphContext.TriggerData.Socket = socket;
+        if (graphContext.TriggerData.Socket.SocketType != SocketType.Vector2)
         {
             // More Error handling here
-            TriggerData.Socket.SocketType = SocketType.Vector2;
+            graphContext.TriggerData.Socket.SocketType = SocketType.Vector2;
         }
-        TriggerData.Vector2 = value;
+        graphContext.TriggerData.Vector2 = value;
     }
-    public void OutputTrigger(ref Socket socket, Vector3 value)
+    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, Vector3 value)
     {
-        _TriggerOutput = 1;
-        TriggerData.Socket = socket;
-        if (TriggerData.Socket.SocketType != SocketType.Vector3)
+        graphContext._TriggerOutput = 1;
+        graphContext.TriggerData.Socket = socket;
+        if (graphContext.TriggerData.Socket.SocketType != SocketType.Vector3)
         {
             // More Error handling here
-            TriggerData.Socket.SocketType = SocketType.Vector3;
+            graphContext.TriggerData.Socket.SocketType = SocketType.Vector3;
         }
-        TriggerData.Vector3 = value;
+        graphContext.TriggerData.Vector3 = value;
     }
-    public void OutputTrigger(ref Socket socket, Vector4 value)
+
+    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, Vector4 value)
     {
-        _TriggerOutput = 1;
-        TriggerData.Socket = socket;
-        if (TriggerData.Socket.SocketType != SocketType.Vector4)
+        graphContext._TriggerOutput = 1;
+        graphContext.TriggerData.Socket = socket;
+        if (graphContext.TriggerData.Socket.SocketType != SocketType.Vector4)
         {
             // More Error handling here
-            TriggerData.Socket.SocketType = SocketType.Vector4;
+            graphContext.TriggerData.Socket.SocketType = SocketType.Vector4;
         }
-        TriggerData.Vector4 = value;
+        graphContext.TriggerData.Vector4 = value;
     }
 }
 
@@ -120,20 +126,8 @@ public class VisualScriptingSystem : JobComponentSystem
 
         // The entity key is the External Graph
         public NativeMultiHashMap<Entity, TriggerData> ExternalInputs;
-
-
-
-        // Auto-generated
-        [NativeDisableParallelForRestrictionAttribute]
-        public ComponentDataFromEntity<ConsoleLogComponentData> ConsoleLogComponentDatas;
-        [NativeDisableParallelForRestrictionAttribute]
-        public ComponentDataFromEntity<WaitComponentData> WaitComponentDatas;
-        [NativeDisableParallelForRestrictionAttribute]
-        public ComponentDataFromEntity<SetFloatComponentData> SetFloatComponentDatas;
-        [NativeDisableParallelForRestrictionAttribute]
-        public ComponentDataFromEntity<StartComponentData> StartComponentDatas;
-        //
-
+        
+        public NativeArray<NodeData> NodeData;
 
         public void Initialize()
         {
@@ -150,9 +144,8 @@ public class VisualScriptingSystem : JobComponentSystem
                 Entity nodeEntity = NodeEntities[i];
                 GraphContext graphContext = new GraphContext();
                 NodeRuntime nodeRuntime = NodeRuntime[nodeEntity];
-                NodeData nodeData = GetNodeData(nodeEntity, ref nodeRuntime);
-                NodesInGraph[i].FunctionPointerInitialize.Invoke(ref nodeData, ref graphContext);
-                SetNodeData(ref nodeEntity, ref nodeRuntime, ref nodeData);
+                NodesInGraph[i].FunctionPointerInitialize.Invoke(ref nodeRuntime.NodeData, ref graphContext);
+                NodeRuntime[nodeEntity] = nodeRuntime;
                 ProcessGraphContext(ref nodeEntity, ref graphContext);
             }
 
@@ -162,7 +155,7 @@ public class VisualScriptingSystem : JobComponentSystem
                 OutputsToEdgesEntity.Add(EdgesInGraph[i].SocketOutput.SocketEntity, edgeEntity);
             }
         }
-
+        
         public void Dispose()
         {
             ProcessThisFrame.Dispose();
@@ -176,50 +169,6 @@ public class VisualScriptingSystem : JobComponentSystem
         public bool NeedProcessing()
         {
             return ProcessThisFrame.Length > 0 || InputsToTrigger.Length > 0 || InputsToTriggerSignal.Length > 0;
-        }
-
-        private NodeData GetNodeData(Entity entity, ref NodeRuntime nodeRuntime)
-        {
-            NodeTypeEnum nodeType = NodeTypeEnum.Undefined;
-            nodeRuntime.FunctionPointerGetNodeType.Invoke(ref nodeType);
-
-            // Auto-generated
-            switch(nodeType)
-            {
-                case NodeTypeEnum.ConsoleLog:
-                    return new NodeData() { ConsoleLogComponentData = ConsoleLogComponentDatas[entity] };
-                case NodeTypeEnum.SetFloat:
-                    return new NodeData() { SetFloatComponentData = SetFloatComponentDatas[entity] };
-                case NodeTypeEnum.Start:
-                    return new NodeData() { StartComponentData = StartComponentDatas[entity] };
-                case NodeTypeEnum.Wait:
-                    return new NodeData() { WaitComponentData = WaitComponentDatas[entity] };
-            }
-
-            return new NodeData();
-        }
-
-        private void SetNodeData(ref Entity entity, ref NodeRuntime nodeRuntime, ref NodeData nodeData)
-        {
-            NodeTypeEnum nodeType = NodeTypeEnum.Undefined;
-            nodeRuntime.FunctionPointerGetNodeType.Invoke(ref nodeType);
-
-            // Auto-generated
-            switch (nodeType)
-            {
-                case NodeTypeEnum.ConsoleLog:
-                    ConsoleLogComponentDatas[entity] = nodeData.ConsoleLogComponentData;
-                    break;
-                case NodeTypeEnum.SetFloat:
-                    SetFloatComponentDatas[entity] = nodeData.SetFloatComponentData;
-                    break;
-                case NodeTypeEnum.Start:
-                    StartComponentDatas[entity] = nodeData.StartComponentData;
-                    break;
-                case NodeTypeEnum.Wait:
-                    WaitComponentDatas[entity] = nodeData.WaitComponentData;
-                    break;
-            }
         }
 
         // Need to find a way to have direct function calls inside this class 
@@ -263,79 +212,6 @@ public class VisualScriptingSystem : JobComponentSystem
             }
         }
 
-        [BurstCompile]
-        public void Execute()
-        {
-            // Step 1 : Process each nodes
-            for (int i = 0; i < ProcessThisFrame.Length; i++)
-            {
-                Entity nodeEntity = ProcessThisFrame[i];
-                var nodeRuntime = NodeRuntime[nodeEntity];
-
-                GraphContext graphContext = new GraphContext();
-                NodeData nodeData = GetNodeData(nodeEntity, ref nodeRuntime);
-                NodeRuntime[nodeEntity].FunctionPointerUpdate.Invoke(ref nodeData, ref graphContext);
-                // Burst is not allowing me to pass the job as the struct is non-blittable due to NativeArrays.
-                // This adds a ton of code and a slowness. Need to find a better way
-                //NodeRuntime[currentNode].FunctionPointerUpdate.Invoke(ref currentNode, ref this);
-                SetNodeData(ref nodeEntity, ref nodeRuntime, ref nodeData);
-                
-                ProcessGraphContext(ref nodeEntity, ref graphContext);
-            }
-
-            // Step 2 : Traverse edges. Always trigger signals last. Each time we process a signal, execute the inputs of other types.
-            for (int indexSignal = 0; indexSignal < InputsToTriggerSignal.Length; indexSignal++)
-            {
-                for (int indexTrigger = 0; indexTrigger < InputsToTrigger.Length; indexTrigger++)
-                {
-                    TriggerData socketTrigger = InputsToTrigger[indexTrigger];
-                    GraphContext graphContextTrigger = new GraphContext();
-                    NodeRuntime nodeRuntimeTrigger = NodeRuntime[socketTrigger.Socket.NodeEntity];
-                    NodeData nodeDataTrigger = GetNodeData(socketTrigger.Socket.NodeEntity, ref nodeRuntimeTrigger);
-                    nodeRuntimeTrigger.FunctionPointerInputTrigger.Invoke(ref nodeDataTrigger, ref socketTrigger, ref graphContextTrigger);
-                    SetNodeData(ref socketTrigger.Socket.NodeEntity, ref nodeRuntimeTrigger, ref nodeDataTrigger);
-                    ProcessGraphContext(ref socketTrigger.Socket.NodeEntity, ref graphContextTrigger);
-                }
-
-                InputsToTrigger.Clear();
-                
-                TriggerData socket = InputsToTrigger[indexSignal];
-                Entity nodeEntity = socket.Socket.NodeEntity;
-                GraphContext graphContext = new GraphContext();
-                NodeRuntime nodeRuntime = NodeRuntime[nodeEntity];
-                NodeData nodeData = GetNodeData(nodeEntity, ref nodeRuntime);
-                nodeRuntime.FunctionPointerInputTrigger.Invoke(ref nodeData, ref socket, ref graphContext);
-                SetNodeData(ref nodeEntity, ref nodeRuntime, ref nodeData);
-                ProcessGraphContext(ref nodeEntity, ref graphContext);
-            }
-
-            InputsToTriggerSignal.Clear();
-
-            // Step 3 : Add / Remove updates after processing all the nodes
-            for (int i = 0; i < ProcessToAdd.Length; i++)
-            {
-                Entity toAdd = ProcessToAdd[i];
-                if (!ProcessThisFrame.Contains(toAdd))
-                {
-                    ProcessThisFrame.Add(toAdd);
-                }
-            }
-
-            ProcessToAdd.Clear();
-
-            for (int i = 0; i < ProcessToRemove.Length; i++)
-            {
-                int indexOfEntity = ProcessThisFrame.IndexOf(ProcessToRemove[i]);
-                if (indexOfEntity >= 0)
-                {
-                    ProcessThisFrame.RemoveAtSwapBack(indexOfEntity);
-                }
-            }
-
-            ProcessToRemove.Clear();
-        }
-
-        #region OutputTriggers
         [BurstCompile]
         public void OutputTrigger(ref Socket socketOutput)
         {
@@ -418,7 +294,72 @@ public class VisualScriptingSystem : JobComponentSystem
             }
         }
 
-        #endregion
+        [BurstCompile]
+        public void Execute()
+        {
+            // Step 1 : Process each nodes
+            for (int i = 0; i < ProcessThisFrame.Length; i++)
+            {
+                Entity nodeEntity = ProcessThisFrame[i];
+                
+                GraphContext graphContext = new GraphContext();
+                NodeRuntime nodeRuntime = NodeRuntime[nodeEntity];
+                nodeRuntime.FunctionPointerUpdate.Invoke(ref nodeRuntime.NodeData, ref graphContext);
+                NodeRuntime[nodeEntity] = nodeRuntime;
+                
+                ProcessGraphContext(ref nodeEntity, ref graphContext);
+            }
+
+            // Step 2 : Traverse edges. Always trigger signals last. Each time we process a signal, execute the inputs of other types.
+            for (int indexSignal = 0; indexSignal < InputsToTriggerSignal.Length; indexSignal++)
+            {
+                for (int indexTrigger = 0; indexTrigger < InputsToTrigger.Length; indexTrigger++)
+                {
+                    TriggerData socketTrigger = InputsToTrigger[indexTrigger];
+                    GraphContext graphContextTrigger = new GraphContext();
+                    Entity nodeEntityTrigger = socketTrigger.Socket.NodeEntity;
+                    NodeRuntime nodeRuntimeTrigger = NodeRuntime[nodeEntityTrigger];
+                    nodeRuntimeTrigger.FunctionPointerInputTrigger.Invoke(ref nodeRuntimeTrigger.NodeData, ref socketTrigger, ref graphContextTrigger);
+                    NodeRuntime[nodeEntityTrigger] = nodeRuntimeTrigger;
+                    ProcessGraphContext(ref socketTrigger.Socket.NodeEntity, ref graphContextTrigger);
+                }
+
+                InputsToTrigger.Clear();
+                
+                TriggerData socket = InputsToTrigger[indexSignal];
+                Entity nodeEntity = socket.Socket.NodeEntity;
+                GraphContext graphContext = new GraphContext();
+                NodeRuntime nodeRuntime = NodeRuntime[nodeEntity];
+                nodeRuntime.FunctionPointerInputTrigger.Invoke(ref nodeRuntime.NodeData, ref socket, ref graphContext);
+                NodeRuntime[nodeEntity] = nodeRuntime;
+                ProcessGraphContext(ref nodeEntity, ref graphContext);
+            }
+
+            InputsToTriggerSignal.Clear();
+
+            // Step 3 : Add / Remove updates after processing all the nodes
+            for (int i = 0; i < ProcessToAdd.Length; i++)
+            {
+                Entity toAdd = ProcessToAdd[i];
+                if (!ProcessThisFrame.Contains(toAdd))
+                {
+                    ProcessThisFrame.Add(toAdd);
+                }
+            }
+
+            ProcessToAdd.Clear();
+
+            for (int i = 0; i < ProcessToRemove.Length; i++)
+            {
+                int indexOfEntity = ProcessThisFrame.IndexOf(ProcessToRemove[i]);
+                if (indexOfEntity >= 0)
+                {
+                    ProcessThisFrame.RemoveAtSwapBack(indexOfEntity);
+                }
+            }
+
+            ProcessToRemove.Clear();
+        }
     }
 
     List<VisualScriptingGraphJob> jobs = new List<VisualScriptingGraphJob>();
@@ -430,7 +371,7 @@ public class VisualScriptingSystem : JobComponentSystem
         Entities.ForEach((Entity entity, ref VisualScriptingGraphTag vsGraph) =>
         {
             graphNodesQuery.SetSharedComponentFilter(new NodeSharedComponentData { Graph = entity });
-
+            
             VisualScriptingGraphJob job = new VisualScriptingGraphJob()
             {
                 GraphEntity = entity,
@@ -441,15 +382,6 @@ public class VisualScriptingSystem : JobComponentSystem
                 EdgeEntities = graphEdgesQuery.ToEntityArray(Allocator.Persistent),
                 NodeRuntime = GetComponentDataFromEntity<NodeRuntime>(),
                 EdgeRuntime = GetComponentDataFromEntity<EdgeRuntime>(),
-
-
-                /*
-                Auto-Generated
-                */
-                ConsoleLogComponentDatas = GetComponentDataFromEntity<ConsoleLogComponentData>(),
-                StartComponentDatas = GetComponentDataFromEntity<StartComponentData>(),
-                SetFloatComponentDatas = GetComponentDataFromEntity<SetFloatComponentData>(),
-                WaitComponentDatas = GetComponentDataFromEntity<WaitComponentData>(),
             };
             job.Initialize();
             jobs.Add(job);

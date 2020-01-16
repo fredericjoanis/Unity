@@ -39,18 +39,19 @@ public class Wait : Node
 
     public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity NodeEntity)
     {
+        WaitComponentData componentData = new WaitComponentData()
+        {
+            TriggeredTime = 0,
+            WaitTime = WaitTime.DefaultValue,
+        };
+        
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.Wait,
             FunctionPointerGetNodeType = BurstCompiler.CompileFunctionPointer<NodeRuntime.GetNodeType>(WaitFunctions.GetNodeType),
             FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(WaitFunctions.Update),
             FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(WaitFunctions.InputTrigger),
-        });
-
-        dstManager.AddComponentData(entity, new WaitComponentData()
-        {
-            TriggeredTime = 0,
-            WaitTime = WaitTime.DefaultValue,
+            NodeData = new NodeData() { WaitComponentData = componentData }
         });
     }
 }

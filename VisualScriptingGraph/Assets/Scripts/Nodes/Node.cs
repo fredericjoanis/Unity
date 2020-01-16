@@ -45,4 +45,6 @@ public struct NodeRuntime : IComponentData
     public FunctionPointer<Update> FunctionPointerUpdate;
     public FunctionPointer<InputTrigger> FunctionPointerInputTrigger;
     public FunctionPointer<GetNodeType> FunctionPointerGetNodeType;
+
+    public NodeData NodeData;
 }

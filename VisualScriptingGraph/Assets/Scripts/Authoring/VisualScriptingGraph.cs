@@ -24,14 +24,14 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
     {
         foreach(var node in nodes)
         {
-            Entity entityNode = conversionSystem.EntityManager.CreateEntity();
-            node.Convert(entityNode, dstManager, conversionSystem, entity);
+            Entity entityNode = conversionSystem.CreateAdditionalEntity(this);
+            node.Convert(entity, dstManager, conversionSystem, entityNode);
             dstManager.AddSharedComponentData(entityNode, new NodeSharedComponentData { Graph = entity });
         }
 
         foreach (var edge in edges)
         {
-            Entity entityEdge = conversionSystem.EntityManager.CreateEntity();
+            Entity entityEdge = conversionSystem.CreateAdditionalEntity(this);
             edge.Convert(entityEdge, dstManager, conversionSystem);
         }
 
@@ -39,3 +39,14 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
     }
 }
 
+/*
+[UpdateInGroup(typeof(GameObjectAfterConversionGroup))]
+public class ConvertSystem : GameObjectConversionSystem
+{
+    protected override void OnUpdate()
+    {
+        var graphs = GetEntityQuery(typeof(VisualScriptingGraph))
+            .ToComponentArray<VisualScriptingGraph>();
+    }
+}
+*/
