@@ -10,30 +10,23 @@ public struct WaitComponentData : IComponentData
 }
 
 [BurstCompile]
-public class WaitSystem : JobComponentSystem
+public class WaitFunctions
 {
-    [NativeDisableParallelForRestrictionAttribute]
-    private static ComponentDataFromEntity<WaitComponentData> WaitComponents;
-
     [BurstCompile]
-    public static void Update(ref Entity entity, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
     {
 
     }
 
     [BurstCompile]
-    public static void InputTrigger(ref TriggerData socketValue, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void InputTrigger(ref NodeData nodeData, ref TriggerData socketValue, ref GraphContext graphContext)
     {
     }
 
-    protected override void OnCreate()
+    [BurstCompile]
+    public static void GetNodeType(ref NodeTypeEnum nodeType)
     {
-        WaitComponents = GetComponentDataFromEntity<WaitComponentData>();
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        return inputDeps;
+        nodeType = NodeTypeEnum.Wait;
     }
 }
 
@@ -49,8 +42,9 @@ public class Wait : Node
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.Wait,
-            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(WaitSystem.Update),
-            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(WaitSystem.InputTrigger),
+            FunctionPointerGetNodeType = BurstCompiler.CompileFunctionPointer<NodeRuntime.GetNodeType>(WaitFunctions.GetNodeType),
+            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(WaitFunctions.Update),
+            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(WaitFunctions.InputTrigger),
         });
 
         dstManager.AddComponentData(entity, new WaitComponentData()

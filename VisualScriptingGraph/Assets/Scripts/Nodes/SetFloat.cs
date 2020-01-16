@@ -10,30 +10,23 @@ public struct SetFloatComponentData : IComponentData
 
 
 [BurstCompile]
-public class SetFloatSystem : JobComponentSystem
+public class SetFloatFunctions
 {
-    [NativeDisableParallelForRestrictionAttribute]
-    private static ComponentDataFromEntity<SetFloatComponentData> SetFloatComponents;
-
     [BurstCompile]
-    public static void Update(ref Entity entity, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
     {
 
     }
 
     [BurstCompile]
-    public static void InputTrigger(ref Entity inputTriggered, ref TriggerData socketValue, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void InputTrigger(ref NodeData nodeData, ref TriggerData socketValue, ref GraphContext graphContext)
     {
     }
 
-    protected override void OnCreate()
+    [BurstCompile]
+    public static void GetNodeType(ref NodeTypeEnum nodeType)
     {
-        SetFloatComponents = GetComponentDataFromEntity<SetFloatComponentData>();
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        return inputDeps;
+        nodeType = NodeTypeEnum.SetFloat;
     }
 }
 
@@ -49,7 +42,8 @@ public class SetFloat : Node
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.SetFloat,
-            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(SetFloatSystem.Update),
+            FunctionPointerGetNodeType = BurstCompiler.CompileFunctionPointer<NodeRuntime.GetNodeType>(WaitFunctions.GetNodeType),
+            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(SetFloatFunctions.Update),
             //FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(SetFloatSystem.InputTrigger),
         });
         dstManager.AddComponentData(entity, new SetFloatComponentData() { value = Value.DefaultValue });

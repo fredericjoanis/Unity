@@ -8,30 +8,23 @@ public struct ConsoleLogComponentData : IComponentData
 }
 
 [BurstCompile]
-public class ConsoleLogSystem : JobComponentSystem
+public class ConsoleLogFunctions
 {
-    [NativeDisableParallelForRestrictionAttribute]
-    private static ComponentDataFromEntity<ConsoleLogComponentData> ConsoleLogComponents;
-
     [BurstCompile]
-    public static void Update(ref Entity entity, ref NodeRuntime nodeRuntime, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void Update(ref NodeData nodeData, ref NodeRuntime nodeRuntime, ref GraphContext graphContext)
     {
 
     }
 
     [BurstCompile]
-    public static void InputTrigger(ref TriggerData socket, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void InputTrigger(ref NodeData nodeData, ref TriggerData socket, ref GraphContext graphContext)
     {
     }
 
-    protected override void OnCreate()
+    [BurstCompile]
+    public static void GetNodeType(ref NodeTypeEnum nodeType)
     {
-        ConsoleLogComponents = GetComponentDataFromEntity<ConsoleLogComponentData>();
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        return inputDeps;
+        nodeType = NodeTypeEnum.ConsoleLog;
     }
 }
 
@@ -47,7 +40,7 @@ public class ConsoleLog : Node
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.ConsoleLog,
-            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(ConsoleLogSystem.InputTrigger),
+            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(ConsoleLogFunctions.InputTrigger),
         });
 
         dstManager.AddComponentData(entity, new ConsoleLogComponentData() { });

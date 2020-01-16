@@ -9,33 +9,25 @@ public struct StartComponentData : IComponentData
 }
 
 [BurstCompile]
-public class StartSystem : JobComponentSystem
+public class StartFunctions
 {
-    [NativeDisableParallelForRestrictionAttribute]
-    private static ComponentDataFromEntity<StartComponentData> StartComponents;
-
-    protected override void OnCreate()
+    [BurstCompile]
+    public static unsafe void Initialize(ref NodeData nodeData, ref GraphContext graphContext)
     {
-        StartComponents = GetComponentDataFromEntity<StartComponentData>();
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        return inputDeps;
+        graphContext.ProcessEachFrame();
     }
 
     [BurstCompile]
-    public static void Initialize(ref Entity entity, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
     {
-        system.ProcessEachFrame(ref entity);
+        graphContext.OutputTrigger(ref nodeData.StartComponentData.Output);
+        graphContext.StopProcessEachFrame();
     }
 
     [BurstCompile]
-    public static void Update(ref Entity entity, ref VisualScriptingSystem.VisualScriptingExecution system)
+    public static void GetNodeType(ref NodeTypeEnum nodeType)
     {
-        StartComponentData startData = StartComponents[entity];
-        system.OutputTrigger(ref startData.Output);
-        system.StopProcessEachFrame(ref entity);
+        nodeType = NodeTypeEnum.Wait;
     }
 }
 
@@ -44,16 +36,13 @@ public class Start : Node
 {
     public SocketOutputSignal Output;
 
-    [NativeDisableParallelForRestrictionAttribute]
-    private static ComponentDataFromEntity<StartComponentData> StartComponents;
-
     public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
             NodeType = NodeTypeEnum.Start,
-            FunctionPointerInitialize = BurstCompiler.CompileFunctionPointer<NodeRuntime.Initialize>(StartSystem.Initialize),
-            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(StartSystem.Update),
+            FunctionPointerInitialize = BurstCompiler.CompileFunctionPointer<NodeRuntime.Initialize>(StartFunctions.Initialize),
+            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(StartFunctions.Update),
         });
 
         dstManager.AddComponentData(entity, new StartComponentData()
