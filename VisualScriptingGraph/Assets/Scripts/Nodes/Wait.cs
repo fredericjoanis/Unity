@@ -1,12 +1,19 @@
 ﻿using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
+
+// Thoughts
+// The FunctionPointer limited to static functions is really limitating. More precisely, that we can only pass Blittable data.
+//  a. In the current implementation, the nodes can't have access to ComponentDataFromEntity, NativeArrays, etc.
+//  b. Which means nodes should be System to set any required context. Compositor is that way. Which probably means codegen is necessary.
+//  d. IComponentData should be normal ComponentData, but because of FunctionPointer with only blittable data, 
+//     I had to fudge them all in a single struct.
+//  e. Some way to have indirections in jobs would make our life much easier.
 
 public struct WaitComponentData : IComponentData
 {
     public float WaitTime;
     public float TriggeredTime;
+    public float CurrentTime;
 }
 
 [BurstCompile]
@@ -15,7 +22,6 @@ public class WaitFunctions
     [BurstCompile]
     public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
     {
-
     }
 
     [BurstCompile]

@@ -156,6 +156,12 @@ public class VisualScriptingSystem : JobComponentSystem
                 ProcessGraphContext(ref nodeEntity, ref graphContext);
             }
 
+            if(ProcessToAdd.Length > 0)
+            {
+                ProcessThisFrame.CopyFrom(ProcessToAdd.ToArray());
+                ProcessToAdd.Clear();
+            }
+
             for (int i = 0; i < EdgesInGraph.Length; i++)
             {
                 Entity edgeEntity = EdgeEntities[i];
@@ -371,7 +377,7 @@ public class VisualScriptingSystem : JobComponentSystem
     }
 
     List<VisualScriptingGraphJob> jobs = new List<VisualScriptingGraphJob>();
-    protected override void OnCreateManager()
+    protected override void OnStartRunning()
     {
         EntityQuery graphNodesQuery = GetEntityQuery(typeof(NodeRuntime), typeof(NodeSharedComponentData));
         EntityQuery graphEdgesQuery = GetEntityQuery(typeof(EdgeRuntime), typeof(NodeSharedComponentData));
@@ -379,7 +385,8 @@ public class VisualScriptingSystem : JobComponentSystem
         Entities.ForEach((Entity entity, ref VisualScriptingGraphTag vsGraph) =>
         {
             graphNodesQuery.SetSharedComponentFilter(new NodeSharedComponentData { Graph = entity });
-            
+            graphEdgesQuery.SetSharedComponentFilter(new NodeSharedComponentData { Graph = entity });
+
             VisualScriptingGraphJob job = new VisualScriptingGraphJob()
             {
                 GraphEntity = entity,
@@ -396,10 +403,8 @@ public class VisualScriptingSystem : JobComponentSystem
         }).WithoutBurst().Run();
     }
 
-    protected override void OnDestroy()
+    protected override void OnStopRunning()
     {
-        base.OnDestroy();
-
         for (int i = 0; i < jobs.Count; i++)
         {
             jobs[i].Dispose();

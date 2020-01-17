@@ -6,6 +6,7 @@ using UnityEngine;
 
 public struct VisualScriptingGraphTag : IComponentData
 {
+    public Entity Entity; // ArchetypeChunk.GetNativeArray<VisualScriptingGraphTag> cannot be called on zero-sized IComponentData
 }
 
 public struct NodeSharedComponentData : ISharedComponentData
@@ -33,9 +34,10 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
         {
             Entity entityEdge = conversionSystem.CreateAdditionalEntity(this);
             edge.Convert(entityEdge, dstManager, conversionSystem);
+            dstManager.AddSharedComponentData(entityEdge, new NodeSharedComponentData { Graph = entity });
         }
 
-        dstManager.AddComponentData(entity, new VisualScriptingGraphTag());
+        dstManager.AddComponentData(entity, new VisualScriptingGraphTag() { Entity = entity });
     }
 }
 
