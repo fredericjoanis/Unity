@@ -4,35 +4,36 @@ using Unity.Burst;
 using Unity.Entities;
 using UnityEngine;
 
-[StructLayout(LayoutKind.Explicit)]
+//[StructLayout(LayoutKind.Explicit)]
 public struct TriggerData : IComponentData
 {
-    [FieldOffset(0)]
+    //[FieldOffset(0)]
     public Socket Socket;
 
-    [FieldOffset(18)]
+    //[FieldOffset(18)]
     public int IntValue;
 
-    [FieldOffset(18)]
+    //[FieldOffset(18)]
     public float FloatValue;
 
-    [FieldOffset(18)]
+    //[FieldOffset(18)]
     public Vector2 Vector2;
 
-    [FieldOffset(18)]
+    //[FieldOffset(18)]
     public Vector3 Vector3;
 
-    [FieldOffset(18)]
+    //[FieldOffset(18)]
     public Vector4 Vector4;
 
-    [FieldOffset(18)]
+    //[FieldOffset(18)]
     public Entity Entity;
+}
 
-    [FieldOffset(18)]
-    public BlobString BlobString;
-
+[BurstCompile]
+public static class ConvertTriggerData
+{
     [BurstCompile]
-    public static void ConvertData(ref TriggerData triggerData, ref float data)
+    public static void ConvertDataFloat(ref TriggerData triggerData, ref float data)
     {
         switch (triggerData.Socket.SocketType)
         {
@@ -55,7 +56,7 @@ public struct TriggerData : IComponentData
     }
 
     [BurstCompile]
-    public static void ConvertData(ref TriggerData triggerData, ref int data)
+    public static void ConvertDataInt(ref TriggerData triggerData, ref int data)
     {
         switch (triggerData.Socket.SocketType)
         {
@@ -78,7 +79,7 @@ public struct TriggerData : IComponentData
     }
 
     [BurstCompile]
-    public static void ConvertData(ref TriggerData triggerData, ref Vector2 data)
+    public static void ConvertDataVector2(ref TriggerData triggerData, ref Vector2 data)
     {
         switch (triggerData.Socket.SocketType)
         {
@@ -101,7 +102,7 @@ public struct TriggerData : IComponentData
     }
 
     [BurstCompile]
-    public static void ConvertData(ref TriggerData triggerData, ref Vector3 data)
+    public static void ConvertDataVector3(ref TriggerData triggerData, ref Vector3 data)
     {
         switch (triggerData.Socket.SocketType)
         {
@@ -124,7 +125,7 @@ public struct TriggerData : IComponentData
     }
 
     [BurstCompile]
-    public static void ConvertData(ref TriggerData triggerData, ref Vector4 data)
+    public static void ConvertDataVector4(ref TriggerData triggerData, ref Vector4 data)
     {
         switch (triggerData.Socket.SocketType)
         {

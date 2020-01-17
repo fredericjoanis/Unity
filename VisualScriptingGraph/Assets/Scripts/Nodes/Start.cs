@@ -12,16 +12,16 @@ public struct StartComponentData : IComponentData
 public class StartFunctions
 {
     [BurstCompile]
-    public static unsafe void Initialize(ref NodeData nodeData, ref GraphContext graphContext)
+    public static void Initialize(ref NodeData nodeData, ref GraphContext graphContext)
     {
-        graphContext.ProcessEachFrame();
+        GraphContextExt.ProcessEachFrame(ref graphContext);
     }
 
     [BurstCompile]
     public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
     {
-        graphContext.OutputTrigger(ref nodeData.StartComponentData.Output);
-        graphContext.StopProcessEachFrame();
+        GraphContextExt.OutputSignal(ref graphContext, ref nodeData.StartComponentData.Output);
+        GraphContextExt.StopProcessEachFrame(ref graphContext);
     }
 
     [BurstCompile]

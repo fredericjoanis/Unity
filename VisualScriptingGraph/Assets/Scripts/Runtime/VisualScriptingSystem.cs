@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
-using Unity.Transforms;
 using UnityEngine;
-using static Unity.Mathematics.math;
 
 public struct GraphContext
 {
@@ -18,25 +14,30 @@ public struct GraphContext
     public TriggerData TriggerData;
 }
 
+[BurstCompile]
 public static class GraphContextExt
 {
-    public static void ProcessEachFrame(ref this GraphContext graphContext)
+    [BurstCompile]
+    public static void ProcessEachFrame(ref GraphContext graphContext)
     {
         graphContext._ProcessEachFrame = 1;
     }
 
-    public static void StopProcessEachFrame(ref this GraphContext graphContext)
+    [BurstCompile]
+    public static void StopProcessEachFrame(ref GraphContext graphContext)
     {
         graphContext._StopProcessEachFrame = 1;
     }
 
-    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket)
+    [BurstCompile]
+    public static void OutputSignal(ref GraphContext graphContext, ref Socket socket)
     {
         graphContext._TriggerOutput = 1;
         graphContext.TriggerData.Socket = socket;
     }
 
-    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, float value)
+    [BurstCompile]
+    public static void OutputFloat(ref GraphContext graphContext, ref Socket socket, ref float value)
     {
         graphContext._TriggerOutput = 1;
         graphContext.TriggerData.Socket = socket;
@@ -48,7 +49,8 @@ public static class GraphContextExt
         graphContext.TriggerData.FloatValue = value;
     }
 
-    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, int value)
+    [BurstCompile]
+    public static void OutputInt(ref GraphContext graphContext, ref Socket socket, ref int value)
     {
         graphContext._TriggerOutput = 1;
         graphContext.TriggerData.Socket = socket;
@@ -59,7 +61,9 @@ public static class GraphContextExt
         }
         graphContext.TriggerData.IntValue = value;
     }
-    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, Vector2 value)
+
+    [BurstCompile]
+    public static void OutputVector2(ref GraphContext graphContext, ref Socket socket, ref Vector2 value)
     {
         graphContext._TriggerOutput = 1;
         graphContext.TriggerData.Socket = socket;
@@ -70,7 +74,9 @@ public static class GraphContextExt
         }
         graphContext.TriggerData.Vector2 = value;
     }
-    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, Vector3 value)
+
+    [BurstCompile]
+    public static void OutputVector3(ref GraphContext graphContext, ref Socket socket, ref Vector3 value)
     {
         graphContext._TriggerOutput = 1;
         graphContext.TriggerData.Socket = socket;
@@ -82,7 +88,8 @@ public static class GraphContextExt
         graphContext.TriggerData.Vector3 = value;
     }
 
-    public static void OutputTrigger(ref this GraphContext graphContext, ref Socket socket, Vector4 value)
+    [BurstCompile]
+    public static void OutputVector4(ref GraphContext graphContext, ref Socket socket, ref Vector4 value)
     {
         graphContext._TriggerOutput = 1;
         graphContext.TriggerData.Socket = socket;
@@ -173,7 +180,7 @@ public class VisualScriptingSystem : JobComponentSystem
 
         // Need to find a way to have direct function calls inside this class 
         // or direct access to arrays in the FunctionPointer functions.
-        // This graph context is a huge bottleneck.
+        // This graph context is probably a bottleneck.
         public void ProcessGraphContext(ref Entity currentNode, ref GraphContext graphContext)
         {
             if (graphContext._ProcessEachFrame != 0)
@@ -191,29 +198,29 @@ public class VisualScriptingSystem : JobComponentSystem
                 switch(graphContext.TriggerData.Socket.SocketType)
                 {
                     case SocketType.Signal:
-                        OutputTrigger(ref graphContext.TriggerData.Socket);
+                        OutputSignal(ref graphContext.TriggerData.Socket);
                     break;
                     case SocketType.Int:
-                        OutputTrigger(ref graphContext.TriggerData.Socket, graphContext.TriggerData.IntValue);
+                        OutputInt(ref graphContext.TriggerData.Socket, graphContext.TriggerData.IntValue);
                         break;
                     case SocketType.Float:
-                        OutputTrigger(ref graphContext.TriggerData.Socket, graphContext.TriggerData.FloatValue);
+                        OutputFloat(ref graphContext.TriggerData.Socket, graphContext.TriggerData.FloatValue);
                         break;
                     case SocketType.Vector2:
-                        OutputTrigger(ref graphContext.TriggerData.Socket, graphContext.TriggerData.Vector2);
+                        OutputVector2(ref graphContext.TriggerData.Socket, graphContext.TriggerData.Vector2);
                         break;
                     case SocketType.Vector3:
-                        OutputTrigger(ref graphContext.TriggerData.Socket, graphContext.TriggerData.Vector3);
+                        OuputVector3(ref graphContext.TriggerData.Socket, graphContext.TriggerData.Vector3);
                         break;
                     case SocketType.Vector4:
-                        OutputTrigger(ref graphContext.TriggerData.Socket, graphContext.TriggerData.Vector4);
+                        OutputVector4(ref graphContext.TriggerData.Socket, graphContext.TriggerData.Vector4);
                         break;
                 }
             }
         }
 
         [BurstCompile]
-        public void OutputTrigger(ref Socket socketOutput)
+        public void OutputSignal(ref Socket socketOutput)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for(int i = 0; i < edgesEntities.Length; i++)
@@ -225,7 +232,7 @@ public class VisualScriptingSystem : JobComponentSystem
             }
         }
         
-        public void OutputTrigger(ref Socket socketOutput, float value)
+        public void OutputFloat(ref Socket socketOutput, float value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
@@ -233,13 +240,13 @@ public class VisualScriptingSystem : JobComponentSystem
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
                 TriggerData val = new TriggerData() { Socket = edge.SocketInput };
-                TriggerData.ConvertData(ref val, ref value);
+                ConvertTriggerData.ConvertDataFloat(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
 
-        public void OutputTrigger(ref Socket socketOutput, int value)
+        public void OutputInt(ref Socket socketOutput, int value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
@@ -247,13 +254,13 @@ public class VisualScriptingSystem : JobComponentSystem
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
                 TriggerData val = new TriggerData() { Socket = edge.SocketInput };
-                TriggerData.ConvertData(ref val, ref value);
+                ConvertTriggerData.ConvertDataInt(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
 
-        public void OutputTrigger(ref Socket socketOutput, Vector2 value)
+        public void OutputVector2(ref Socket socketOutput, Vector2 value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
@@ -261,13 +268,13 @@ public class VisualScriptingSystem : JobComponentSystem
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
                 TriggerData val = new TriggerData() { Socket = edge.SocketInput };
-                TriggerData.ConvertData(ref val, ref value);
+                ConvertTriggerData.ConvertDataVector2(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
 
-        public void OutputTrigger(ref Socket socketOutput, Vector3 value)
+        public void OuputVector3(ref Socket socketOutput, Vector3 value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
@@ -275,12 +282,13 @@ public class VisualScriptingSystem : JobComponentSystem
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
                 TriggerData val = new TriggerData() { Socket = edge.SocketInput };
-                TriggerData.ConvertData(ref val, ref value);
+                ConvertTriggerData.ConvertDataVector3(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
         }
-        public void OutputTrigger(ref Socket socketOutput, Vector4 value)
+
+        public void OutputVector4(ref Socket socketOutput, Vector4 value)
         {
             NativeArray<Entity> edgesEntities = OutputsToEdgesEntity.GetValueArray(Allocator.TempJob);
             for (int i = 0; i < edgesEntities.Length; i++)
@@ -288,7 +296,7 @@ public class VisualScriptingSystem : JobComponentSystem
                 EdgeRuntime edge = EdgeRuntime[edgesEntities[i]];
 
                 TriggerData val = new TriggerData() { Socket = edge.SocketInput };
-                TriggerData.ConvertData(ref val, ref value);
+                ConvertTriggerData.ConvertDataVector4(ref val, ref value);
 
                 InputsToTrigger.Add(val);
             }
@@ -363,7 +371,7 @@ public class VisualScriptingSystem : JobComponentSystem
     }
 
     List<VisualScriptingGraphJob> jobs = new List<VisualScriptingGraphJob>();
-    protected override void OnCreate()
+    protected override void OnCreateManager()
     {
         EntityQuery graphNodesQuery = GetEntityQuery(typeof(NodeRuntime), typeof(NodeSharedComponentData));
         EntityQuery graphEdgesQuery = GetEntityQuery(typeof(EdgeRuntime), typeof(NodeSharedComponentData));

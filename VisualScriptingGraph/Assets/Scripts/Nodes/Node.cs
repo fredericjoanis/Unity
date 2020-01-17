@@ -19,16 +19,16 @@ public enum NodeTypeEnum
     Wait
 }
 
-[StructLayout(LayoutKind.Explicit)]
+//[StructLayout(LayoutKind.Explicit)]
 public struct NodeData
 {
-    [FieldOffset(0)]
+    //[FieldOffset(0)]
     public ConsoleLogComponentData ConsoleLogComponentData;
-    [FieldOffset(0)]
+    //[FieldOffset(0)]
     public SetFloatComponentData SetFloatComponentData;
-    [FieldOffset(0)]
+    //[FieldOffset(0)]
     public StartComponentData StartComponentData;
-    [FieldOffset(0)]
+    //[FieldOffset(0)]
     public WaitComponentData WaitComponentData;
 }
 
