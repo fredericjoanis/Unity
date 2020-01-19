@@ -5,10 +5,10 @@ using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
 
-//[BurstCompile]
+[BurstCompile]
 public class VisualScriptingSystem : JobComponentSystem
 {
-    //[BurstCompile]
+    [BurstCompile]
     public struct VisualScriptingGraphJob : IJob
     {
         public Entity GraphEntity;
@@ -464,7 +464,7 @@ public class VisualScriptingSystem : JobComponentSystem
     {
         bool hasProcessed = false;
         bool firstIteration = true;
-
+        
         //do
         {
             hasProcessed = false;
