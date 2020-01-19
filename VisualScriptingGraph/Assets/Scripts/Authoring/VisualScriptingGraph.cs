@@ -31,6 +31,14 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
 [UpdateInGroup(typeof(GameObjectAfterConversionGroup))]
 public class ConvertSystem : GameObjectConversionSystem
 {
+
+    protected void SetSocketNode(Entity socketEntity, Entity nodeEntity)
+    {
+        Socket socket = DstEntityManager.GetComponentData<Socket>(socketEntity);
+        socket.NodeEntity = nodeEntity;
+        DstEntityManager.SetComponentData<Socket>(socketEntity, socket);
+    }
+
     protected override void OnUpdate()
     {
         var graphs = GetEntityQuery(typeof(VisualScriptingGraph)).ToComponentArray<VisualScriptingGraph>();
@@ -47,17 +55,27 @@ public class ConvertSystem : GameObjectConversionSystem
                 switch (node)
                 {
                     case Start start:
-                        var startData = DstEntityManager.GetComponentData<StartComponentData>(nodeEntity);
-                        var socketOutputEntity = GetPrimaryEntity(start.Output);
+                        {
+                            Entity socketOutputEntity = GetPrimaryEntity(start.Output);
+                            SetSocketNode(socketOutputEntity, nodeEntity);
 
-                        var socket = DstEntityManager.GetComponentData<Socket>(socketOutputEntity);
-                        socket.NodeEntity = nodeEntity;
-                        
-                        startData.OutputSocket = socketOutputEntity;
-
-                        DstEntityManager.SetComponentData<Socket>(socketOutputEntity, socket);
-                        DstEntityManager.SetComponentData<StartComponentData>(nodeEntity, startData);
+                            StartComponentData startData = DstEntityManager.GetComponentData<StartComponentData>(nodeEntity);
+                            startData.OutputSocket = socketOutputEntity;
+                            DstEntityManager.SetComponentData<StartComponentData>(nodeEntity, startData);
+                        }
                     break;
+                    case Wait wait:
+                        {
+                            Entity socketOutputEntity = GetPrimaryEntity(wait.Output);
+                            SetSocketNode(socketOutputEntity, nodeEntity);
+                            SetSocketNode(GetPrimaryEntity(wait.Trigger), nodeEntity);
+                            SetSocketNode(GetPrimaryEntity(wait.WaitTime), nodeEntity);
+
+                            WaitComponentData waitData = DstEntityManager.GetComponentData<WaitComponentData>(nodeEntity);
+                            waitData.Output = socketOutputEntity;
+                            DstEntityManager.SetComponentData<WaitComponentData>(nodeEntity, waitData);
+                        }
+                        break;
                 }
                 // Code-generated end
             }

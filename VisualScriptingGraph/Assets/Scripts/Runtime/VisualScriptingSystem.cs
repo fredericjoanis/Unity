@@ -333,7 +333,7 @@ public class VisualScriptingSystem : JobComponentSystem
                             StartJob.Execute(node, ref this);
                             break;
                         case NodeTypeEnum.Wait:
-                            WaitJob.OnStartRunning(node, ref this);
+                            WaitJob.Execute(node, ref this);
                             break;
                     }
                     // Code-gen stop
@@ -349,38 +349,44 @@ public class VisualScriptingSystem : JobComponentSystem
                 {
                     TriggerData triggerData2 = InputsToTrigger[indexTrigger];
                     Entity nodeTrigger = Socket[triggerData2.SocketInput].NodeEntity;
-                    NodeTypeEnum nodeTypeTrigger = NodeType[nodeTrigger].Value;
-
-                    // Code-gen start. Assuming Burst is doing a Jump table.
-                    switch (nodeTypeTrigger)
+                    if (nodeTrigger != Entity.Null)
                     {
-                        case NodeTypeEnum.Start:
-                            StartJob.InputTriggered(nodeTrigger, ref triggerData2, ref this);
-                        break;
-                        case NodeTypeEnum.Wait:
-                            WaitJob.InputTriggered(nodeTrigger, ref triggerData2, ref this);
-                        break;
+                        NodeTypeEnum nodeTypeTrigger = NodeType[nodeTrigger].Value;
+
+                        // Code-gen start. Assuming Burst is doing a Jump table.
+                        switch (nodeTypeTrigger)
+                        {
+                            case NodeTypeEnum.Start:
+                                StartJob.InputTriggered(nodeTrigger, ref triggerData2, ref this);
+                                break;
+                            case NodeTypeEnum.Wait:
+                                WaitJob.InputTriggered(nodeTrigger, ref triggerData2, ref this);
+                                break;
+                        }
+                        // Code-gen stop
                     }
-                    // Code-gen stop
                 }
 
                 InputsToTrigger.Clear();
                 
                 TriggerData triggerData = InputsToTriggerSignal[indexSignal];
                 Entity node = Socket[triggerData.SocketInput].NodeEntity;
-                NodeTypeEnum nodeType = NodeType[node].Value;
-
-                // Code-gen start. Assuming Burst is doing a Jump table.
-                switch (nodeType)
+                if (node != Entity.Null)
                 {
-                    case NodeTypeEnum.Start:
-                        StartJob.InputTriggered(node, ref triggerData, ref this);
-                        break;
-                    case NodeTypeEnum.Wait:
-                        WaitJob.InputTriggered(node, ref triggerData, ref this);
-                    break;
+                    NodeTypeEnum nodeType = NodeType[node].Value;
+
+                    // Code-gen start. Assuming Burst is doing a Jump table.
+                    switch (nodeType)
+                    {
+                        case NodeTypeEnum.Start:
+                            StartJob.InputTriggered(node, ref triggerData, ref this);
+                            break;
+                        case NodeTypeEnum.Wait:
+                            WaitJob.InputTriggered(node, ref triggerData, ref this);
+                            break;
+                    }
+                    // Code-gen stop
                 }
-                // Code-gen stop
             }
 
             InputsToTriggerSignal.Clear();
@@ -413,6 +419,7 @@ public class VisualScriptingSystem : JobComponentSystem
     private class GraphJobRef
     {
         public VisualScriptingGraphJob graphJob;
+        public JobHandle jobHandle;
     }
 
     List<GraphJobRef> GraphJob = new List<GraphJobRef>();
@@ -458,9 +465,7 @@ public class VisualScriptingSystem : JobComponentSystem
         bool hasProcessed = false;
         bool firstIteration = true;
 
-        JobHandle jobHandle = inputDeps;
-
-        do
+        //do
         {
             hasProcessed = false;
 
@@ -473,11 +478,17 @@ public class VisualScriptingSystem : JobComponentSystem
 
                 if (GraphJob[i].graphJob.NeedProcessing())
                 {
-                    jobHandle = GraphJob[i].graphJob.Schedule(jobHandle);
+                    GraphJob[i].jobHandle = GraphJob[i].graphJob.Schedule();
+                    
                     hasProcessed = true;
                 }
             }
-            jobHandle.Complete();
+
+            // Todo: Transform this in JobHandle.CompleteAll();
+            for (int i = 0; i < GraphJob.Count; i++)
+            {
+                GraphJob[i].jobHandle.Complete();
+            }
 
             firstIteration = false;
 
@@ -488,8 +499,8 @@ public class VisualScriptingSystem : JobComponentSystem
                 // If there's an input set, hasProcessed = true;
             }
         }
-        while (hasProcessed == true);
+        //while (hasProcessed == true);
 
-        return jobHandle;
+        return inputDeps;
     }
 }
