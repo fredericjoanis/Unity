@@ -5,7 +5,7 @@ using Unity.Jobs;
 
 public struct StartComponentData : IComponentData
 {
-    public Socket Output;
+    public Entity OutputSocket;
 }
 
 public struct StartJob : INodeJob
@@ -21,7 +21,7 @@ public struct StartJob : INodeJob
     public void Execute(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
         var data = StartComponentData[node];
-        graph.OutputSignal(ref data.Output);
+        graph.OutputSignal(data.OutputSocket);
         graph.StopProcessEachFrame(node);
     }
 
@@ -46,11 +46,10 @@ public class Start : Node
 {
     public SocketOutputSignal Output;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         dstManager.AddComponentData(entity, new StartComponentData()
         {
-            Output = Output.ConvertToSocketRuntime(nodeEntity, entity)
         });
         
         dstManager.AddComponentData(entity, new NodeType()

@@ -16,9 +16,9 @@ public interface INodeJob
 }
 
 [RequiresEntityConversion]
-public abstract class Node : MonoBehaviour
+public abstract class Node : MonoBehaviour, IConvertGameObjectToEntity
 {
-    public abstract void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity);
+    public abstract void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem);
 }
 
 // Need to be auto-generated

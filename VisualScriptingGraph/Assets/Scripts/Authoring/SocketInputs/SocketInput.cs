@@ -3,20 +3,15 @@ using Unity.Entities;
 using UnityEngine;
 
 [RequiresEntityConversion]
-public abstract class SocketInput : MonoBehaviour
+public abstract class SocketInput : MonoBehaviour, IConvertGameObjectToEntity
 {
-    public Socket Socket;
     public abstract SocketType GetSocketType();
 
-    public Socket ConvertToSocketRuntime(Entity nodeEntity, Entity socketEntity)
+    public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        Socket = new Socket()
+        dstManager.AddComponentData<Socket>(entity, new Socket()
         {
-            SocketType = GetSocketType(),
-            SocketEntity = socketEntity,
-            NodeEntity = nodeEntity
-        };
-
-        return Socket;
+            SocketType = GetSocketType()
+        });
     }
 }

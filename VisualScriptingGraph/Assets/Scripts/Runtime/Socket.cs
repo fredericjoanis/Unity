@@ -17,7 +17,6 @@ public enum SocketType : System.UInt16
 }
 public struct Socket : IComponentData
 {
-    public Entity SocketEntity;
     public Entity NodeEntity;
     public SocketType SocketType;
 }

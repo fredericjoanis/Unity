@@ -7,7 +7,7 @@ public struct WaitComponentData : IComponentData
 {
     public double WaitTime;
     public double TriggeredTime;
-    public Socket Output;
+    public Entity Output;
 }
 
 public struct WaitJob : INodeJob
@@ -22,7 +22,7 @@ public struct WaitJob : INodeJob
         WaitComponentData data = WaitComponentData[node];
         if(data.TriggeredTime + data.WaitTime > ElapsedTime)
         {
-            graph.OutputSignal(ref data.Output);
+            graph.OutputSignal(data.Output);
             graph.StopProcessEachFrame(node);
         }
     }
@@ -62,13 +62,13 @@ public class Wait : Node
     public SocketInputFloat WaitTime;
     public SocketOutputSignal Output;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         dstManager.AddComponentData(entity, new WaitComponentData()
         {
             TriggeredTime = 0,
             WaitTime = WaitTime.DefaultValue,
-            Output = Output.ConvertToSocketRuntime(nodeEntity, entity),
+            //Output = Output.ConvertToSocketRuntime(nodeEntity, entity),
         });
         
         dstManager.AddComponentData(entity, new NodeType()

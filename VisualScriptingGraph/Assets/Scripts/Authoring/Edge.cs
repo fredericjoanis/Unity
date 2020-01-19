@@ -4,24 +4,20 @@ using UnityEngine;
 
 public struct EdgeRuntime : IComponentData
 {
-    public Socket SocketInput;
-    public Socket SocketOutput;
+    public Entity SocketInput;
+    public Entity SocketOutput;
 }
 
 [Serializable]
 [RequiresEntityConversion]
-public class Edge : MonoBehaviour
+public class Edge : MonoBehaviour, IConvertGameObjectToEntity
 {
     public SocketInput SocketInput;
     public SocketOutput SocketOutput;
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        var Sockets = conversionSystem.GetComponentDataFromEntity<Socket>();
-
         dstManager.AddComponentData(entity, new EdgeRuntime()
         {
-            SocketInput = SocketInput.Socket,
-            SocketOutput = SocketOutput.Socket
         });
     }
 }
