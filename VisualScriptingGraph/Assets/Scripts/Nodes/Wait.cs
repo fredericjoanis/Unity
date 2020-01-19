@@ -20,7 +20,7 @@ public struct WaitJob : INodeJob
     public void Execute(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
         WaitComponentData data = WaitComponentData[node];
-        if(data.TriggeredTime + data.WaitTime > ElapsedTime)
+        if(data.TriggeredTime + data.WaitTime <= ElapsedTime)
         {
             graph.OutputSignal(data.Output);
             graph.StopProcessEachFrame(node);

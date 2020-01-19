@@ -367,10 +367,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nodes:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 1166647132}
+  - {fileID: 2102994611}
   edges:
-  - {fileID: 0}
+  - {fileID: 145731399}
 --- !u!1 &2102994606
 GameObject:
   m_ObjectHideFlags: 0
@@ -429,7 +429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b5936e337e2c3a4088f911fe818f47d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DefaultValue: 0.72
+  DefaultValue: 5
 --- !u!114 &2102994610
 MonoBehaviour:
   m_ObjectHideFlags: 0

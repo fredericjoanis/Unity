@@ -29,7 +29,8 @@ public class VisualScriptingSystem : JobComponentSystem
         private NativeList<TriggerData> InputsToTriggerSignal;
         private NativeList<TriggerData> InputsToTrigger;
 
-        public bool FirstProcessThisFrame;
+        public int LastFrame;
+        public int CurrentFrame;
 
         // The entity key is the External Graph
         //public NativeMultiHashMap<Entity, TriggerData> ExternalInputs;
@@ -94,14 +95,9 @@ public class VisualScriptingSystem : JobComponentSystem
             EdgeEntities.Dispose();
         }
 
-        public void FirstProcessInFrame()
-        {
-            FirstProcessThisFrame = true;
-        }
-
         public bool NeedProcessing()
         {
-            if (FirstProcessThisFrame)
+            if (LastFrame != CurrentFrame)
             {
                 return ProcessThisFrame.Length > 0 || InputsToTrigger.Length > 0 || InputsToTriggerSignal.Length > 0;
             }
@@ -171,20 +167,18 @@ public class VisualScriptingSystem : JobComponentSystem
             }
         }
 
-        /*
+        
         public void OutputInt(Entity socket, int value)
         {
-            var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
-            while (edgesResult.MoveNext())
+            var inputSocket = OutputsToEdgesEntity.GetValuesForKey(socket);
+            while (inputSocket.MoveNext())
             {
-                EdgeRuntime edge = EdgeRuntime[edgesResult.Current];
-
                 TriggerData triggerData = new TriggerData()
                 {
-                    SocketInput = edge.SocketInput,
+                    SocketInput = inputSocket.Current,
                 };
 
-                switch (Socket[edge.SocketInput].SocketType)
+                switch (Socket[inputSocket.Current].SocketType)
                 {
                     case SocketType.Float:
                         triggerData.FloatValue = value;
@@ -209,17 +203,15 @@ public class VisualScriptingSystem : JobComponentSystem
 
         public void OutputVector2(Entity socket, Vector2 value)
         {
-            var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
-            while (edgesResult.MoveNext())
+            var inputSocket = OutputsToEdgesEntity.GetValuesForKey(socket);
+            while (inputSocket.MoveNext())
             {
-                EdgeRuntime edge = EdgeRuntime[edgesResult.Current];
-
                 TriggerData triggerData = new TriggerData()
                 {
-                    SocketInput = edge.SocketInput,
+                    SocketInput = inputSocket.Current,
                 };
 
-                switch (Socket[edge.SocketInput].SocketType)
+                switch (Socket[inputSocket.Current].SocketType)
                 {
                     case SocketType.Float:
                         triggerData.FloatValue = value.x;
@@ -244,17 +236,15 @@ public class VisualScriptingSystem : JobComponentSystem
 
         public void OuputVector3(Entity socket, Vector3 value)
         {
-            var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
-            while (edgesResult.MoveNext())
+            var inputSocket = OutputsToEdgesEntity.GetValuesForKey(socket);
+            while (inputSocket.MoveNext())
             {
-                EdgeRuntime edge = EdgeRuntime[edgesResult.Current];
-
                 TriggerData triggerData = new TriggerData()
                 {
-                    SocketInput = edge.SocketInput,
+                    SocketInput = inputSocket.Current,
                 };
 
-                switch (Socket[edge.SocketInput].SocketType)
+                switch (Socket[inputSocket.Current].SocketType)
                 {
                     case SocketType.Float:
                         triggerData.FloatValue = value.x;
@@ -279,17 +269,15 @@ public class VisualScriptingSystem : JobComponentSystem
 
         public void OutputVector4(Entity socket, Vector4 value)
         {
-            var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
-            while (edgesResult.MoveNext())
+            var inputSocket = OutputsToEdgesEntity.GetValuesForKey(socket);
+            while (inputSocket.MoveNext())
             {
-                EdgeRuntime edge = EdgeRuntime[edgesResult.Current];
-
                 TriggerData triggerData = new TriggerData()
                 {
-                    SocketInput = edge.SocketInput,
+                    SocketInput = inputSocket.Current,
                 };
 
-                switch (Socket[edge.SocketInput].SocketType)
+                switch (Socket[inputSocket.Current].SocketType)
                 {
                     case SocketType.Float:
                         triggerData.FloatValue = value.x;
@@ -311,15 +299,13 @@ public class VisualScriptingSystem : JobComponentSystem
                 InputsToTrigger.Add(triggerData);
             }
         }
-
-    */
         
 
         [BurstCompile]
         public void Execute()
         {
             // Step 1 : Process each nodes
-            if (FirstProcessThisFrame)
+            if (CurrentFrame != LastFrame)
             {
                 for (int i = 0; i < ProcessThisFrame.Length; i++)
                 {
@@ -338,9 +324,8 @@ public class VisualScriptingSystem : JobComponentSystem
                     }
                     // Code-gen stop
                 }
-                FirstProcessThisFrame = false;
+                LastFrame = CurrentFrame;
             }
-
 
             // Step 2 : Traverse edges. Always trigger signals last. Each time we process a signal, execute the inputs of other types.
             for (int indexSignal = 0; indexSignal < InputsToTriggerSignal.Length; indexSignal++)
@@ -422,6 +407,17 @@ public class VisualScriptingSystem : JobComponentSystem
         public JobHandle jobHandle;
     }
 
+    public void SetupJobOnUpdate(ref VisualScriptingGraphJob graphJob)
+    {
+        graphJob.Socket = GetComponentDataFromEntity<Socket>();
+        graphJob.NodeType = GetComponentDataFromEntity<NodeType>();
+        graphJob.EdgeRuntime = GetComponentDataFromEntity<EdgeRuntime>();
+
+        // Code-generated start
+        graphJob.StartJob = StartSystem.StartJob;
+        graphJob.WaitJob = WaitSystem.WaitJob;
+    }
+
     List<GraphJobRef> GraphJob = new List<GraphJobRef>();
     protected override void OnStartRunning()
     {
@@ -441,12 +437,9 @@ public class VisualScriptingSystem : JobComponentSystem
                 NodeEntities = graphNodesQuery.ToEntityArray(Allocator.Persistent),
                 EdgesInGraph = graphEdgesQuery.ToComponentDataArray<EdgeRuntime>(Allocator.Persistent),
                 EdgeEntities = graphEdgesQuery.ToEntityArray(Allocator.Persistent),
-                Socket = GetComponentDataFromEntity<Socket>(),
-                NodeType = GetComponentDataFromEntity<NodeType>(),
-                EdgeRuntime = GetComponentDataFromEntity<EdgeRuntime>(),
-                StartJob = StartSystem.StartJob,
-                WaitJob = WaitSystem.WaitJob,
             };
+
+            SetupJobOnUpdate(ref job);
             job.OnStartRunning();
             GraphJob.Add(new GraphJobRef() { graphJob = job });
         }).WithoutBurst().Run();
@@ -462,24 +455,21 @@ public class VisualScriptingSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        bool hasProcessed = false;
-        bool firstIteration = true;
-        
-        //do
+        bool hasProcessed;
+        do
         {
             hasProcessed = false;
 
             for (int i = 0; i < GraphJob.Count; i++)
             {
-                if(firstIteration)
-                {
-                    GraphJob[i].graphJob.FirstProcessInFrame();
-                }
+                GraphJob[i].graphJob.CurrentFrame = UnityEngine.Time.frameCount;
 
                 if (GraphJob[i].graphJob.NeedProcessing())
                 {
+                    SetupJobOnUpdate(ref GraphJob[i].graphJob);
+
                     GraphJob[i].jobHandle = GraphJob[i].graphJob.Schedule();
-                    
+
                     hasProcessed = true;
                 }
             }
@@ -488,9 +478,8 @@ public class VisualScriptingSystem : JobComponentSystem
             for (int i = 0; i < GraphJob.Count; i++)
             {
                 GraphJob[i].jobHandle.Complete();
+                GraphJob[i].graphJob.LastFrame = UnityEngine.Time.frameCount;
             }
-
-            firstIteration = false;
 
             for (int i = 0; i < GraphJob.Count; i++)
             {
@@ -499,7 +488,7 @@ public class VisualScriptingSystem : JobComponentSystem
                 // If there's an input set, hasProcessed = true;
             }
         }
-        //while (hasProcessed == true);
+        while (hasProcessed == true);
 
         return inputDeps;
     }
