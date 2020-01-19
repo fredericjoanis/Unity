@@ -53,7 +53,7 @@ public class ConvertSystem : GameObjectConversionSystem
                         var socket = DstEntityManager.GetComponentData<Socket>(socketOutputEntity);
                         socket.NodeEntity = nodeEntity;
                         
-                        startData.OutputSocket = nodeEntity;
+                        startData.OutputSocket = socketOutputEntity;
 
                         DstEntityManager.SetComponentData<Socket>(socketOutputEntity, socket);
                         DstEntityManager.SetComponentData<StartComponentData>(nodeEntity, startData);

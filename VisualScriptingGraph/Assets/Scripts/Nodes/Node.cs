@@ -10,7 +10,7 @@ public abstract class INodeSystem : JobComponentSystem
 
 public interface INodeJob
 {
-    void Initialize(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
+    void OnStartRunning(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
     void Execute(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
     void InputTriggered(Entity node, ref TriggerData triggerData, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
 }

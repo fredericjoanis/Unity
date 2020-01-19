@@ -5,10 +5,10 @@ using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
 
-[BurstCompile]
+//[BurstCompile]
 public class VisualScriptingSystem : JobComponentSystem
 {
-    [BurstCompile]
+    //[BurstCompile]
     public struct VisualScriptingGraphJob : IJob
     {
         public Entity GraphEntity;
@@ -29,6 +29,8 @@ public class VisualScriptingSystem : JobComponentSystem
         private NativeList<TriggerData> InputsToTriggerSignal;
         private NativeList<TriggerData> InputsToTrigger;
 
+        public bool FirstProcessThisFrame;
+
         // The entity key is the External Graph
         //public NativeMultiHashMap<Entity, TriggerData> ExternalInputs;
 
@@ -37,7 +39,7 @@ public class VisualScriptingSystem : JobComponentSystem
         public WaitJob WaitJob;
         // Code-gen end
 
-        public void Initialize()
+        public void OnStartRunning()
         {
             ProcessThisFrame = new NativeList<Entity>(Allocator.Persistent);
             ProcessToAdd = new NativeList<Entity>(Allocator.Persistent);
@@ -45,7 +47,7 @@ public class VisualScriptingSystem : JobComponentSystem
             InputsToTriggerSignal = new NativeList<TriggerData>(Allocator.Persistent);
             InputsToTrigger = new NativeList<TriggerData>(Allocator.Persistent);
             //ExternalInputs = new NativeMultiHashMap<Entity, TriggerData>();
-            OutputsToEdgesEntity = new NativeMultiHashMap<Entity, Entity>(EdgesInGraph.Length, Allocator.TempJob);
+            OutputsToEdgesEntity = new NativeMultiHashMap<Entity, Entity>(EdgesInGraph.Length, Allocator.Persistent);
 
             for (int i = 0; i < NodesInGraph.Length; i++)
             {
@@ -56,10 +58,10 @@ public class VisualScriptingSystem : JobComponentSystem
                 switch (nodeType)
                 {
                     case NodeTypeEnum.Start:
-                        StartJob.Initialize(node, ref this);
+                        StartJob.OnStartRunning(node, ref this);
                     break;
                     case NodeTypeEnum.Wait:
-                        StartJob.Initialize(node, ref this);
+                        WaitJob.OnStartRunning(node, ref this);
                     break;
                 }
                 // Code-gen stop
@@ -86,11 +88,20 @@ public class VisualScriptingSystem : JobComponentSystem
             InputsToTriggerSignal.Dispose();
             InputsToTrigger.Dispose();
             OutputsToEdgesEntity.Dispose();
+            NodesInGraph.Dispose();
+            NodeEntities.Dispose();
+            EdgesInGraph.Dispose();
+            EdgeEntities.Dispose();
         }
 
-        public bool NeedProcessing(bool firstIteration)
+        public void FirstProcessInFrame()
         {
-            if(firstIteration)
+            FirstProcessThisFrame = true;
+        }
+
+        public bool NeedProcessing()
+        {
+            if (FirstProcessThisFrame)
             {
                 return ProcessThisFrame.Length > 0 || InputsToTrigger.Length > 0 || InputsToTriggerSignal.Length > 0;
             }
@@ -113,35 +124,28 @@ public class VisualScriptingSystem : JobComponentSystem
         [BurstCompile]
         public void OutputSignal(Entity socket)
         {
-            var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
-            while(edgesResult.MoveNext())
+            var inputSocket = OutputsToEdgesEntity.GetValuesForKey(socket);
+            while(inputSocket.MoveNext())
             {
-                EdgeRuntime edge = EdgeRuntime[edgesResult.Current];
-
                 TriggerData val = new TriggerData()
                 {
-                    SocketInput = edge.SocketInput,
-                    NodeInput = Socket[edge.SocketInput].NodeEntity
+                    SocketInput = inputSocket.Current,
                 };
                 InputsToTriggerSignal.Add(val);
             }
         }
-
         
         public void OutputFloat(Entity socket, float value)
         {
-            var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
-            while (edgesResult.MoveNext())
+            var inputSocket = OutputsToEdgesEntity.GetValuesForKey(socket);
+            while (inputSocket.MoveNext())
             {
-                EdgeRuntime edge = EdgeRuntime[edgesResult.Current];
-
                 TriggerData triggerData = new TriggerData()
                 {
-                    SocketInput = edge.SocketInput,
-                    NodeInput = Socket[edge.SocketInput].NodeEntity
+                    SocketInput = inputSocket.Current,
                 };
 
-                switch (Socket[edge.SocketInput].SocketType)
+                switch (Socket[inputSocket.Current].SocketType)
                 {
                     case SocketType.Float:
                         triggerData.FloatValue = value;
@@ -167,7 +171,7 @@ public class VisualScriptingSystem : JobComponentSystem
             }
         }
 
-        
+        /*
         public void OutputInt(Entity socket, int value)
         {
             var edgesResult = OutputsToEdgesEntity.GetValuesForKey(socket);
@@ -178,7 +182,6 @@ public class VisualScriptingSystem : JobComponentSystem
                 TriggerData triggerData = new TriggerData()
                 {
                     SocketInput = edge.SocketInput,
-                    NodeInput = Socket[edge.SocketInput].NodeEntity
                 };
 
                 switch (Socket[edge.SocketInput].SocketType)
@@ -214,7 +217,6 @@ public class VisualScriptingSystem : JobComponentSystem
                 TriggerData triggerData = new TriggerData()
                 {
                     SocketInput = edge.SocketInput,
-                    NodeInput = Socket[edge.SocketInput].NodeEntity
                 };
 
                 switch (Socket[edge.SocketInput].SocketType)
@@ -250,7 +252,6 @@ public class VisualScriptingSystem : JobComponentSystem
                 TriggerData triggerData = new TriggerData()
                 {
                     SocketInput = edge.SocketInput,
-                    NodeInput = Socket[edge.SocketInput].NodeEntity
                 };
 
                 switch (Socket[edge.SocketInput].SocketType)
@@ -286,7 +287,6 @@ public class VisualScriptingSystem : JobComponentSystem
                 TriggerData triggerData = new TriggerData()
                 {
                     SocketInput = edge.SocketInput,
-                    NodeInput = Socket[edge.SocketInput].NodeEntity
                 };
 
                 switch (Socket[edge.SocketInput].SocketType)
@@ -311,29 +311,36 @@ public class VisualScriptingSystem : JobComponentSystem
                 InputsToTrigger.Add(triggerData);
             }
         }
+
+    */
         
 
         [BurstCompile]
         public void Execute()
         {
             // Step 1 : Process each nodes
-            for (int i = 0; i < ProcessThisFrame.Length; i++)
+            if (FirstProcessThisFrame)
             {
-                Entity node = ProcessThisFrame[i];
-                NodeTypeEnum nodeType = NodeType[node].Value;
-
-                // Code-gen start. Assuming Burst is doing a Jump table.
-                switch (nodeType)
+                for (int i = 0; i < ProcessThisFrame.Length; i++)
                 {
-                    case NodeTypeEnum.Start:
-                        StartJob.Execute(node, ref this);
-                    break;
-                    case NodeTypeEnum.Wait:
-                        WaitJob.Initialize(node, ref this);
-                    break;
+                    Entity node = ProcessThisFrame[i];
+                    NodeTypeEnum nodeType = NodeType[node].Value;
+
+                    // Code-gen start. Assuming Burst is doing a Jump table.
+                    switch (nodeType)
+                    {
+                        case NodeTypeEnum.Start:
+                            StartJob.Execute(node, ref this);
+                            break;
+                        case NodeTypeEnum.Wait:
+                            WaitJob.OnStartRunning(node, ref this);
+                            break;
+                    }
+                    // Code-gen stop
                 }
-                // Code-gen stop
+                FirstProcessThisFrame = false;
             }
+
 
             // Step 2 : Traverse edges. Always trigger signals last. Each time we process a signal, execute the inputs of other types.
             for (int indexSignal = 0; indexSignal < InputsToTriggerSignal.Length; indexSignal++)
@@ -341,7 +348,7 @@ public class VisualScriptingSystem : JobComponentSystem
                 for (int indexTrigger = 0; indexTrigger < InputsToTrigger.Length; indexTrigger++)
                 {
                     TriggerData triggerData2 = InputsToTrigger[indexTrigger];
-                    Entity nodeTrigger = triggerData2.NodeInput;
+                    Entity nodeTrigger = Socket[triggerData2.SocketInput].NodeEntity;
                     NodeTypeEnum nodeTypeTrigger = NodeType[nodeTrigger].Value;
 
                     // Code-gen start. Assuming Burst is doing a Jump table.
@@ -359,18 +366,18 @@ public class VisualScriptingSystem : JobComponentSystem
 
                 InputsToTrigger.Clear();
                 
-                TriggerData socket = InputsToTrigger[indexSignal];
-                Entity node = socket.NodeInput;
+                TriggerData triggerData = InputsToTriggerSignal[indexSignal];
+                Entity node = Socket[triggerData.SocketInput].NodeEntity;
                 NodeTypeEnum nodeType = NodeType[node].Value;
 
                 // Code-gen start. Assuming Burst is doing a Jump table.
                 switch (nodeType)
                 {
                     case NodeTypeEnum.Start:
-                        StartJob.InputTriggered(node, ref socket, ref this);
+                        StartJob.InputTriggered(node, ref triggerData, ref this);
                         break;
                     case NodeTypeEnum.Wait:
-                        WaitJob.InputTriggered(node, ref socket, ref this);
+                        WaitJob.InputTriggered(node, ref triggerData, ref this);
                     break;
                 }
                 // Code-gen stop
@@ -403,7 +410,12 @@ public class VisualScriptingSystem : JobComponentSystem
         }
     }
 
-    List<VisualScriptingGraphJob> jobs = new List<VisualScriptingGraphJob>();
+    private class GraphJobRef
+    {
+        public VisualScriptingGraphJob graphJob;
+    }
+
+    List<GraphJobRef> GraphJob = new List<GraphJobRef>();
     protected override void OnStartRunning()
     {
         EntityQuery graphNodesQuery = GetEntityQuery(typeof(NodeType), typeof(NodeSharedComponentData));
@@ -428,20 +440,16 @@ public class VisualScriptingSystem : JobComponentSystem
                 StartJob = StartSystem.StartJob,
                 WaitJob = WaitSystem.WaitJob,
             };
-            job.Initialize();
-            jobs.Add(job);
+            job.OnStartRunning();
+            GraphJob.Add(new GraphJobRef() { graphJob = job });
         }).WithoutBurst().Run();
     }
 
     protected override void OnStopRunning()
     {
-        for (int i = 0; i < jobs.Count; i++)
+        for (int i = 0; i < GraphJob.Count; i++)
         {
-            jobs[i].Dispose();
-            jobs[i].NodesInGraph.Dispose();
-            jobs[i].NodeEntities.Dispose();
-            jobs[i].EdgesInGraph.Dispose();
-            jobs[i].EdgeEntities.Dispose();
+            GraphJob[i].graphJob.Dispose();
         }
     }
 
@@ -456,18 +464,24 @@ public class VisualScriptingSystem : JobComponentSystem
         {
             hasProcessed = false;
 
-            for (int i = 0; i < jobs.Count; i++)
+            for (int i = 0; i < GraphJob.Count; i++)
             {
-                if (jobs[i].NeedProcessing(firstIteration))
+                if(firstIteration)
                 {
-                    jobHandle = jobs[i].Schedule(jobHandle);
+                    GraphJob[i].graphJob.FirstProcessInFrame();
+                }
+
+                if (GraphJob[i].graphJob.NeedProcessing())
+                {
+                    jobHandle = GraphJob[i].graphJob.Schedule(jobHandle);
                     hasProcessed = true;
                 }
             }
             jobHandle.Complete();
+
             firstIteration = false;
 
-            for (int i = 0; i < jobs.Count; i++)
+            for (int i = 0; i < GraphJob.Count; i++)
             {
                 // Todo : Process external outputs.
                 // Each inputs needs to be set in the job.

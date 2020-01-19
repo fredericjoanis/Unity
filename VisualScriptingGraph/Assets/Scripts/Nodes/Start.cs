@@ -13,7 +13,7 @@ public struct StartJob : INodeJob
     [NativeDisableParallelForRestriction]
     public ComponentDataFromEntity<StartComponentData> StartComponentData;
 
-    public void Initialize(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
+    public void OnStartRunning(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
         graph.ProcessEachFrame(node);
     }

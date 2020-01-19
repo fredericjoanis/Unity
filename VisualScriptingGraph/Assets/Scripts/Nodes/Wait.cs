@@ -27,7 +27,7 @@ public struct WaitJob : INodeJob
         }
     }
 
-    public void Initialize(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
+    public void OnStartRunning(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
     }
 
