@@ -2,6 +2,7 @@
 using Unity.Burst;
 using Unity.Entities;
 
+/*
 public struct ConsoleLogComponentData : IComponentData
 {
 }
@@ -21,9 +22,9 @@ public class ConsoleLogFunctions
     }
 
     [BurstCompile]
-    public static void GetNodeType(ref NodeTypeEnum nodeType)
+    public static void GetNodeType(ref NodeType nodeType)
     {
-        nodeType = NodeTypeEnum.ConsoleLog;
+        nodeType = NodeType.ConsoleLog;
     }
 }
 
@@ -40,9 +41,10 @@ public class ConsoleLog : Node
         
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
-            NodeType = NodeTypeEnum.ConsoleLog,
+            NodeType = NodeType.ConsoleLog,
             FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(ConsoleLogFunctions.InputTrigger),
             NodeData = new NodeData() { ConsoleLogComponentData = componentData }
         });
     }
 }
+*/

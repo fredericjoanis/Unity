@@ -8,26 +8,36 @@ public struct StartComponentData : IComponentData
     public Socket Output;
 }
 
-[BurstCompile]
-public class StartFunctions
+public struct StartJob : INodeJob
 {
-    [BurstCompile]
-    public static void Initialize(ref NodeData nodeData, ref GraphContext graphContext)
+    [NativeDisableParallelForRestriction]
+    public ComponentDataFromEntity<StartComponentData> StartComponentData;
+
+    public void Initialize(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
-        GraphContextExt.ProcessEachFrame(ref graphContext);
+        graph.ProcessEachFrame(node);
     }
 
-    [BurstCompile]
-    public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
+    public void Execute(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
-        GraphContextExt.OutputSignal(ref graphContext, ref nodeData.StartComponentData.Output);
-        GraphContextExt.StopProcessEachFrame(ref graphContext);
+        var data = StartComponentData[node];
+        graph.OutputSignal(ref data.Output);
+        graph.StopProcessEachFrame(node);
     }
 
-    [BurstCompile]
-    public static void GetNodeType(ref NodeTypeEnum nodeType)
+    public void InputTriggered(Entity node, ref TriggerData triggerData, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
-        nodeType = NodeTypeEnum.Wait;
+    }
+}
+
+public class StartSystem : INodeSystem
+{
+    public static StartJob StartJob;
+
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        StartJob.StartComponentData = GetComponentDataFromEntity<StartComponentData>();
+        return inputDeps;
     }
 }
 
@@ -38,17 +48,14 @@ public class Start : Node
 
     public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
-        StartComponentData componentData = new StartComponentData()
+        dstManager.AddComponentData(entity, new StartComponentData()
         {
             Output = Output.ConvertToSocketRuntime(nodeEntity, entity)
-        };
+        });
         
-        dstManager.AddComponentData(entity, new NodeRuntime()
+        dstManager.AddComponentData(entity, new NodeType()
         {
-            NodeType = NodeTypeEnum.Start,
-            FunctionPointerInitialize = BurstCompiler.CompileFunctionPointer<NodeRuntime.Initialize>(StartFunctions.Initialize),
-            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(StartFunctions.Update),
-            NodeData = new NodeData() { StartComponentData = componentData }
+            Value = NodeTypeEnum.Start,
         });
     }
 }

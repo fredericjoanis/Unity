@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 
+/*
 public struct SetFloatComponentData : IComponentData
 {
     public float value;
@@ -24,9 +25,9 @@ public class SetFloatFunctions
     }
 
     [BurstCompile]
-    public static void GetNodeType(ref NodeTypeEnum nodeType)
+    public static void GetNodeType(ref NodeType nodeType)
     {
-        nodeType = NodeTypeEnum.SetFloat;
+        nodeType = NodeType.SetFloat;
     }
 }
 
@@ -43,7 +44,7 @@ public class SetFloat : Node
         
         dstManager.AddComponentData(entity, new NodeRuntime()
         {
-            NodeType = NodeTypeEnum.SetFloat,
+            NodeType = NodeType.SetFloat,
             FunctionPointerGetNodeType = BurstCompiler.CompileFunctionPointer<NodeRuntime.GetNodeType>(WaitFunctions.GetNodeType),
             FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(SetFloatFunctions.Update),
             FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(SetFloatFunctions.InputTrigger),
@@ -52,3 +53,4 @@ public class SetFloat : Node
         
     }
 }
+*/

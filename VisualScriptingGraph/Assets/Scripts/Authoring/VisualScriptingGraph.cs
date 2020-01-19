@@ -25,16 +25,22 @@ public class VisualScriptingGraph : MonoBehaviour, IConvertGameObjectToEntity
     {
         foreach(var node in nodes)
         {
-            Entity entityNode = conversionSystem.CreateAdditionalEntity(this);
-            node.Convert(entity, dstManager, conversionSystem, entityNode);
-            dstManager.AddSharedComponentData(entityNode, new NodeSharedComponentData { Graph = entity });
+            if(node)
+            {
+                Entity entityNode = conversionSystem.CreateAdditionalEntity(this);
+                node.Convert(entity, dstManager, conversionSystem, entityNode);
+                dstManager.AddSharedComponentData(entityNode, new NodeSharedComponentData { Graph = entity });
+            }
         }
 
         foreach (var edge in edges)
         {
-            Entity entityEdge = conversionSystem.CreateAdditionalEntity(this);
-            edge.Convert(entityEdge, dstManager, conversionSystem);
-            dstManager.AddSharedComponentData(entityEdge, new NodeSharedComponentData { Graph = entity });
+            if (edge)
+            {
+                Entity entityEdge = conversionSystem.CreateAdditionalEntity(this);
+                edge.Convert(entityEdge, dstManager, conversionSystem);
+                dstManager.AddSharedComponentData(entityEdge, new NodeSharedComponentData { Graph = entity });
+            }
         }
 
         dstManager.AddComponentData(entity, new VisualScriptingGraphTag() { Entity = entity });

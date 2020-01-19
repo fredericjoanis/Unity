@@ -3,6 +3,18 @@ using Unity.Burst;
 using Unity.Entities;
 using UnityEngine;
 
+[UpdateBefore(typeof(VisualScriptingSystem))]
+public abstract class INodeSystem : JobComponentSystem
+{
+}
+
+public interface INodeJob
+{
+    void Initialize(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
+    void Execute(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
+    void InputTriggered(Entity node, ref TriggerData triggerData, ref VisualScriptingSystem.VisualScriptingGraphJob graph);
+}
+
 [RequiresEntityConversion]
 public abstract class Node : MonoBehaviour
 {
@@ -19,32 +31,7 @@ public enum NodeTypeEnum
     Wait
 }
 
-//[StructLayout(LayoutKind.Explicit)]
-public struct NodeData
+public struct NodeType : IComponentData
 {
-    //[FieldOffset(0)]
-    public ConsoleLogComponentData ConsoleLogComponentData;
-    //[FieldOffset(0)]
-    public SetFloatComponentData SetFloatComponentData;
-    //[FieldOffset(0)]
-    public StartComponentData StartComponentData;
-    //[FieldOffset(0)]
-    public WaitComponentData WaitComponentData;
-}
-
-public struct NodeRuntime : IComponentData
-{
-    // NativeArray prevent burst and unsafe C# to pass a ref or *
-    public delegate void Initialize(ref NodeData nodeData, ref GraphContext graphContext);
-    public delegate void Update(ref NodeData nodeData, ref GraphContext graphContext);
-    public delegate void InputTrigger(ref NodeData nodeData, ref TriggerData triggerData, ref GraphContext graphContext);
-    public delegate void GetNodeType(ref NodeTypeEnum nodeType);
-
-    public NodeTypeEnum NodeType;
-    public FunctionPointer<Initialize> FunctionPointerInitialize;
-    public FunctionPointer<Update> FunctionPointerUpdate;
-    public FunctionPointer<InputTrigger> FunctionPointerInputTrigger;
-    public FunctionPointer<GetNodeType> FunctionPointerGetNodeType;
-
-    public NodeData NodeData;
+    public NodeTypeEnum Value;
 }

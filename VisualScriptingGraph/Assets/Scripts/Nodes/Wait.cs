@@ -1,38 +1,57 @@
 ﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
-
-// Thoughts
-// The FunctionPointer limited to static functions is really limitating. More precisely, that we can only pass Blittable data.
-//  a. In the current implementation, the nodes can't have access to ComponentDataFromEntity, NativeArrays, etc.
-//  b. Which means nodes should be System to set any required context. Compositor is that way. Which probably means codegen is necessary.
-//  d. IComponentData should be normal ComponentData, but because of FunctionPointer with only blittable data, 
-//     I had to fudge them all in a single struct.
-//  e. Some way to have indirections in jobs would make our life much easier.
+using Unity.Jobs;
 
 public struct WaitComponentData : IComponentData
 {
-    public float WaitTime;
-    public float TriggeredTime;
-    public float CurrentTime;
+    public double WaitTime;
+    public double TriggeredTime;
+    public Socket Output;
 }
 
-[BurstCompile]
-public class WaitFunctions
+public struct WaitJob : INodeJob
 {
-    [BurstCompile]
-    public static void Update(ref NodeData nodeData, ref GraphContext graphContext)
+    [NativeDisableParallelForRestriction]
+    public ComponentDataFromEntity<WaitComponentData> WaitComponentData;
+
+    public double ElapsedTime;
+
+    public void Execute(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
+    {
+        WaitComponentData data = WaitComponentData[node];
+        if(data.TriggeredTime + data.WaitTime > ElapsedTime)
+        {
+            graph.OutputSignal(ref data.Output);
+            graph.StopProcessEachFrame(node);
+        }
+    }
+
+    public void Initialize(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
     }
 
-    [BurstCompile]
-    public static void InputTrigger(ref NodeData nodeData, ref TriggerData socketValue, ref GraphContext graphContext)
+    public void InputTriggered(Entity node, ref TriggerData triggerData, ref VisualScriptingSystem.VisualScriptingGraphJob graph)
     {
+        WaitComponentData data = WaitComponentData[node];
+        data.TriggeredTime = ElapsedTime;
+        WaitComponentData[node] = data;
+        graph.ProcessEachFrame(node);
     }
+}
 
-    [BurstCompile]
-    public static void GetNodeType(ref NodeTypeEnum nodeType)
+public class WaitSystem : INodeSystem
+{
+    public static WaitJob WaitJob;
+
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        nodeType = NodeTypeEnum.Wait;
+        EntityQuery query = GetEntityQuery(typeof(WaitComponentData));
+
+        WaitJob.WaitComponentData = GetComponentDataFromEntity<WaitComponentData>();
+        WaitJob.ElapsedTime = Time.ElapsedTime;
+
+        return inputDeps;
     }
 }
 
@@ -43,21 +62,18 @@ public class Wait : Node
     public SocketInputFloat WaitTime;
     public SocketOutputSignal Output;
 
-    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity NodeEntity)
+    public override void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, Entity nodeEntity)
     {
-        WaitComponentData componentData = new WaitComponentData()
+        dstManager.AddComponentData(entity, new WaitComponentData()
         {
             TriggeredTime = 0,
             WaitTime = WaitTime.DefaultValue,
-        };
+            Output = Output.ConvertToSocketRuntime(nodeEntity, entity),
+        });
         
-        dstManager.AddComponentData(entity, new NodeRuntime()
+        dstManager.AddComponentData(entity, new NodeType()
         {
-            NodeType = NodeTypeEnum.Wait,
-            FunctionPointerGetNodeType = BurstCompiler.CompileFunctionPointer<NodeRuntime.GetNodeType>(WaitFunctions.GetNodeType),
-            FunctionPointerUpdate = BurstCompiler.CompileFunctionPointer<NodeRuntime.Update>(WaitFunctions.Update),
-            FunctionPointerInputTrigger = BurstCompiler.CompileFunctionPointer<NodeRuntime.InputTrigger>(WaitFunctions.InputTrigger),
-            NodeData = new NodeData() { WaitComponentData = componentData }
+            Value = NodeTypeEnum.Wait,
         });
     }
 }
