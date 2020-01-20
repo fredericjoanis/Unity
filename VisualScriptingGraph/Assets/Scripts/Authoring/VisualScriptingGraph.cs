@@ -76,6 +76,17 @@ public class ConvertSystem : GameObjectConversionSystem
                             DstEntityManager.SetComponentData<WaitComponentData>(nodeEntity, waitData);
                         }
                         break;
+                    case DebugLog debugLog:
+                        {
+                            Entity socketOutputEntity = GetPrimaryEntity(debugLog.Output);
+                            SetSocketNode(socketOutputEntity, nodeEntity);
+                            SetSocketNode(GetPrimaryEntity(debugLog.Trigger), nodeEntity);
+
+                            DebugLogComponentData debugLogComponentData = DstEntityManager.GetComponentData<DebugLogComponentData>(nodeEntity);
+                            debugLogComponentData.OutputSocket = socketOutputEntity;
+                            DstEntityManager.SetComponentData<DebugLogComponentData>(nodeEntity, debugLogComponentData);
+                        }
+                        break;
                 }
                 // Code-generated end
             }

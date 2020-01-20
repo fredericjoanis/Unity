@@ -38,6 +38,7 @@ public class VisualScriptingSystem : JobComponentSystem
         // Code-gen start
         public StartJob StartJob;
         public WaitJob WaitJob;
+        public DebugLogJob DebugLogJob;
         // Code-gen end
 
         public void OnStartRunning()
@@ -63,6 +64,9 @@ public class VisualScriptingSystem : JobComponentSystem
                     break;
                     case NodeTypeEnum.Wait:
                         WaitJob.OnStartRunning(node, ref this);
+                    break;
+                    case NodeTypeEnum.DebugLog:
+                        DebugLogJob.OnStartRunning(node, ref this);
                     break;
                 }
                 // Code-gen stop
@@ -321,6 +325,9 @@ public class VisualScriptingSystem : JobComponentSystem
                         case NodeTypeEnum.Wait:
                             WaitJob.Execute(node, ref this);
                             break;
+                        case NodeTypeEnum.DebugLog:
+                            DebugLogJob.Execute(node, ref this);
+                            break;
                     }
                     // Code-gen stop
                 }
@@ -347,6 +354,9 @@ public class VisualScriptingSystem : JobComponentSystem
                             case NodeTypeEnum.Wait:
                                 WaitJob.InputTriggered(nodeTrigger, ref triggerData2, ref this);
                                 break;
+                            case NodeTypeEnum.DebugLog:
+                                DebugLogJob.InputTriggered(nodeTrigger, ref triggerData2, ref this);
+                                break;
                         }
                         // Code-gen stop
                     }
@@ -368,6 +378,9 @@ public class VisualScriptingSystem : JobComponentSystem
                             break;
                         case NodeTypeEnum.Wait:
                             WaitJob.InputTriggered(node, ref triggerData, ref this);
+                            break;
+                        case NodeTypeEnum.DebugLog:
+                            DebugLogJob.InputTriggered(node, ref triggerData, ref this);
                             break;
                     }
                     // Code-gen stop
@@ -416,6 +429,8 @@ public class VisualScriptingSystem : JobComponentSystem
         // Code-generated start
         graphJob.StartJob = StartSystem.StartJob;
         graphJob.WaitJob = WaitSystem.WaitJob;
+        graphJob.DebugLogJob = DebugLogSystem.DebugLogJob;
+        // Code-generated end
     }
 
     List<GraphJobRef> GraphJob = new List<GraphJobRef>();

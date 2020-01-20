@@ -68,7 +68,6 @@ public class Wait : Node
         {
             TriggeredTime = 0,
             WaitTime = WaitTime.DefaultValue,
-            //Output = Output.ConvertToSocketRuntime(nodeEntity, entity),
         });
         
         dstManager.AddComponentData(entity, new NodeType()

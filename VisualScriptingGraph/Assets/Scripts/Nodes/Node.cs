@@ -25,7 +25,7 @@ public abstract class Node : MonoBehaviour, IConvertGameObjectToEntity
 public enum NodeTypeEnum
 {
     Undefined,
-    ConsoleLog,
+    DebugLog,
     SetFloat,
     Start,
     Wait
