@@ -1,4 +1,5 @@
 ﻿using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 
@@ -9,7 +10,7 @@ public struct StartComponentData : IComponentData
 
 public struct StartJob : INodeJob
 {
-    [NativeDisableParallelForRestriction]
+    [NativeDisableContainerSafetyRestriction]
     public ComponentDataFromEntity<StartComponentData> StartComponentData;
 
     public void OnStartRunning(Entity node, ref VisualScriptingSystem.VisualScriptingGraphJob graph)

@@ -1,5 +1,6 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 
@@ -12,7 +13,7 @@ public struct WaitComponentData : IComponentData
 
 public struct WaitJob : INodeJob
 {
-    [NativeDisableParallelForRestriction]
+    [NativeDisableContainerSafetyRestriction]
     public ComponentDataFromEntity<WaitComponentData> WaitComponentData;
 
     public double ElapsedTime;
